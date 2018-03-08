@@ -1,0 +1,8 @@
+{
+    "python.linting.pep8Enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--load-plugins pylint_django"
+    ],
+    "python.linting.enabled": true,
+}
