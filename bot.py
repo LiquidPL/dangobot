@@ -19,7 +19,7 @@ class DangoBot(commands.Bot):
                 try:
                     self.load_extension('{ext}.plugin'.format(ext=extension))
                 except Exception as e:
-                    print('Failed to load extenstion {ext}: {desc}'.format(ext=extension, desc=e))
+                    print('Failed to load extension {ext}: {desc}'.format(ext=extension, desc=e))
 
 bot = DangoBot()
 bot.run(settings.BOT_TOKEN)
