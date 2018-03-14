@@ -10,6 +10,9 @@ class Command(models.Model):
     response = models.TextField(max_length=2000, blank=True)
     file = models.FileField(upload_to=file_path, blank=True)
 
+    class Meta:
+        unique_together = ('server', 'trigger')
+
     def __str__(self):
         return self.trigger
 
