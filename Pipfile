@@ -10,6 +10,7 @@ name = "pypi"
 "discord.py" = {extras = ["voice"]}
 django = "*"
 pylint-django = "*"
+"psycopg2" = "*"
 
 
 [dev-packages]
