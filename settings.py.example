@@ -11,7 +11,7 @@ SECRET_KEY = 'insertactuallysecuresecretkeyhere'
 DEBUG = True
 
 INSTALLED_APPS = [
-#    'plugins.responder'
+    'plugins.responder'
 ] + INSTALLED_APPS
 
 # Database
@@ -19,8 +19,14 @@ INSTALLED_APPS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.sqlite3', # or backends.postgresql
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'), # change to DB name when using postgres
+
+        # used only when ENGINE is not sqlite3
+        'USER': 'dangobot',
+        'PASSWORD': 'password',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -36,3 +42,10 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# Bot settings
+
+COMMAND_PREFIX = '!'
+DESCRIPTION = 'witty tagline'
+
+BOT_TOKEN = 'actuallyadiscordtoken'

@@ -20,6 +20,6 @@ USER dangobot
 
 WORKDIR /dangobot
 
-RUN pipenv install
+RUN cp settings.py.docker settings.py && pipenv install
 
 CMD sh -c "pipenv run ./manage.py migrate && pipenv run ./bot.py"
