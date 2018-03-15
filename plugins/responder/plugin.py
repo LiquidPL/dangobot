@@ -39,7 +39,11 @@ class Responder:
     @commands.command(pass_context=True)
     @commands.has_permissions(manage_messages=True)
     async def addcommand(self, ctx, trigger : str, response : str):
-        server = Server.objects.get(id=ctx.message.server.id)
+        server, created = Server.objects.get_or_create(
+            id=ctx.message.server.id,
+            defaults={'name': ctx.message.server.name}
+        )
+
         command = Command(server=server, trigger=trigger, response=response)
 
         try:
