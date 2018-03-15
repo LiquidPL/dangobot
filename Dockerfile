@@ -22,4 +22,4 @@ WORKDIR /dangobot
 
 RUN pipenv install
 
-CMD ["pipenv", "run", "./bot.py"]
+CMD sh -c "pipenv run ./manage.py migrate && pipenv run ./bot.py"
