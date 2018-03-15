@@ -5,7 +5,6 @@ from .models import Command
 from db.models import Server
 
 import asyncio
-import functools
 
 class Responder:
     def __init__(self, bot):
@@ -26,15 +25,15 @@ class Responder:
 
         trigger = view.get_word()
 
-        command = Command.objects.filter(trigger=trigger)
-
-        if command.count() != 0:
-            command = command.first()
+        try:
+            command = Command.objects.get(server=message.server.id, trigger=trigger)
 
             if command.file:
                 await self.bot.send_file(message.channel, command.file.path, content=None)
             else:
                 await self.bot.send_message(message.channel, content=command.response)
+        except Command.DoesNotExist:
+            pass
 
     @commands.command(pass_context=True)
     @commands.has_permissions(manage_messages=True)
