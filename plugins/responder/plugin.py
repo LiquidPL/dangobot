@@ -1,10 +1,13 @@
 from discord.ext import commands
 from discord.ext.commands.view import StringView
+from django.core.files import File
+from io import BytesIO
 
 from .models import Command
 from db.models import Server
 
 import asyncio
+import tempfile
 
 class Responder:
     def __init__(self, bot):
@@ -29,7 +32,7 @@ class Responder:
             command = Command.objects.get(server=message.server.id, trigger=trigger)
 
             if command.file:
-                await self.bot.send_file(message.channel, command.file.path, content=None)
+                await self.bot.send_file(message.channel, command.file.path, content=command.response)
             else:
                 await self.bot.send_message(message.channel, content=command.response)
         except Command.DoesNotExist:
@@ -37,16 +40,31 @@ class Responder:
 
     @commands.command(pass_context=True)
     @commands.has_permissions(manage_messages=True)
-    async def addcommand(self, ctx, trigger : str, response : str):
+    async def addcommand(self, ctx, trigger : str, response : str, url : str = None):
         server, created = Server.objects.get_or_create(
             id=ctx.message.server.id,
             defaults={'name': ctx.message.server.name}
         )
 
+        if url:
+            file = tempfile.NamedTemporaryFile()
+            file_name = url.split('/')[-1]
+
+            async with self.bot.session.get(url) as r:
+                while True:
+                    chunk = await r.content.read(1024)
+                    if not chunk:
+                        break
+
+                    file.write(chunk)
+
         command = Command(server=server, trigger=trigger, response=response)
 
         try:
             command.save()
+
+            if file:
+                command.file.save(file_name, File(file))
 
             await self.bot.send_message(
                 ctx.message.channel,

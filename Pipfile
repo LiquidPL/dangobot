@@ -11,6 +11,7 @@ name = "pypi"
 django = "*"
 pylint-django = "*"
 "psycopg2" = "*"
+aiohttp = "*"
 
 
 [dev-packages]

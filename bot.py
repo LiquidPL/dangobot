@@ -3,6 +3,7 @@
 from discord.ext import commands
 from django import setup
 
+import aiohttp
 import asyncio
 import os
 
@@ -15,6 +16,8 @@ from django.conf import settings
 class DangoBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=settings.COMMAND_PREFIX, description=settings.DESCRIPTION)
+
+        self.session = aiohttp.ClientSession(loop=self.loop)
 
         for extension in settings.INSTALLED_APPS:
             if extension.startswith('plugins.'):
