@@ -1,7 +1,6 @@
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 from django.core.files import File
-from io import BytesIO
 
 from .models import Command
 from db.models import Server

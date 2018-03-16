@@ -14,12 +14,14 @@ RUN mkdir /dangobot \
 
 COPY . /dangobot
 
-RUN chown -R dangobot:dangobot /dangobot
+RUN mkdir /dangobot/media \
+    && chown -R dangobot:dangobot /dangobot
 
 USER dangobot
 
 WORKDIR /dangobot
 
-RUN cp settings.py.docker settings.py && pipenv install
+RUN cp settings.py.docker settings.py \
+    && pipenv install
 
 CMD sh -c "pipenv run ./manage.py migrate && pipenv run ./bot.py"
