@@ -1,0 +1,50 @@
+from dangobot.base_settings import *
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SECRET_KEY = 'insertactuallysecuresecretkeyhere'
+
+DEBUG = True
+
+INSTALLED_APPS = [
+    # 'dangobot.commands',
+] + INSTALLED_APPS
+
+# Database
+# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dangobot',
+
+        'USER': 'dangobot',
+        'PASSWORD': 'password',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}
+
+# Internationalization
+# https://docs.djangoproject.com/en/2.0/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+# Bot settings
+
+COMMAND_PREFIX = '!'
+DESCRIPTION = 'description'
+
+BOT_TOKEN = 'actual discord api token'
