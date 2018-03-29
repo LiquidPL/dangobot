@@ -5,7 +5,7 @@ from django.db import connection
 import asyncpg
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class DangoBot(commands.Bot):
@@ -23,6 +23,8 @@ class DangoBot(commands.Bot):
             host=connection.settings_dict['HOST'],
             port=connection.settings_dict['PORT']
         )
+
+        logger.info('Logged in as {0}'.format(self.user))
 
     async def on_guild_join(self, guild):
         async with self.pool.acquire() as conn:
