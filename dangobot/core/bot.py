@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import connection
 
 import asyncpg
+import importlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,8 +16,18 @@ class DangoBot(commands.Bot):
             description=settings.DESCRIPTION
         )
 
+        for app in settings.INSTALLED_APPS:
+            try:
+                module = importlib.import_module(app)
+
+                if getattr(module, 'is_plugin', False):
+                    self.load_extension('{app}.plugin'.format(app=app))
+
+            except Exception as e:
+                logger.exception('Failed to load extension {}'.format(app))
+
     async def on_ready(self):
-        self.pool = await asyncpg.create_pool(
+        self.db_pool = await asyncpg.create_pool(
             database=connection.settings_dict['NAME'],
             user=connection.settings_dict['USER'],
             password=connection.settings_dict['PASSWORD'],
@@ -27,7 +38,7 @@ class DangoBot(commands.Bot):
         logger.info('Logged in as {0}'.format(self.user))
 
     async def on_guild_join(self, guild):
-        async with self.pool.acquire() as conn:
+        async with self.db_pool.acquire() as conn:
             row = await conn.fetchrow(
                 'SELECT * FROM core_guild WHERE id = $1',
                 guild.id
