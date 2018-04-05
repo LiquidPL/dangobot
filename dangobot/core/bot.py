@@ -2,6 +2,8 @@ from discord.ext import commands
 from django.conf import settings
 from django.db import connection
 
+from . import context
+
 import asyncpg
 import importlib
 import logging
@@ -25,6 +27,10 @@ class DangoBot(commands.Bot):
 
             except Exception as e:
                 logger.exception('Failed to load extension {}'.format(app))
+
+    async def process_commands(self, message):
+        ctx = await self.get_context(message, cls=context.Context)
+        await self.invoke(ctx)
 
     async def on_ready(self):
         self.db_pool = await asyncpg.create_pool(

@@ -1,6 +1,8 @@
 from .models import Command
 
+from asyncpg import exceptions
 from discord import File
+from discord.ext import commands
 from django.conf import settings
 
 import logging
@@ -40,6 +42,57 @@ class Commands:
                     content=command['response'],
                     file=open_file(command['file'])
                 )
+
+    @commands.group(name='commands', invoke_without_command=True)
+    @commands.has_permissions(administrator=True)
+    async def cmds(self, ctx):
+        """
+        Management of user-defined commands.
+        """
+        await ctx.send_help('commands')
+
+    @cmds.error
+    async def cmds_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("You don't have permissions to do this!")
+
+    @cmds.command()
+    async def add(self, ctx, trigger: str, *, response: str):
+        """
+        Add a new command.
+        """
+        async with self.bot.db_pool.acquire() as conn:
+            await conn.execute(
+                "INSERT INTO {table}(guild_id, trigger, response, file) "
+                "VALUES ($1, $2, $3, '')".format(table=self.table),
+                ctx.guild.id, trigger, response
+            )
+
+        await ctx.send('Command `{}` added successfully!'.format(trigger))
+
+    @add.error
+    async def add_error(self, ctx, error):
+        if (
+            isinstance(error, commands.CommandInvokeError) and
+            isinstance(error.original, exceptions.UniqueViolationError)
+        ):
+            await ctx.send(
+                'Command `{}` already exists!'.format(ctx.args[-1])
+            )
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(
+                'You need to specify the {}!'.format(error.param.name)
+            )
+        else:
+            await ctx.send('An error has occured!')
+
+    @cmds.command()
+    async def remove(self, ctx):
+        pass
+
+    @cmds.command()
+    async def edit(self, ctx):
+        pass
 
 
 def setup(bot):
