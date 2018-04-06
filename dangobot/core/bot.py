@@ -5,6 +5,7 @@ from django.db import connection
 from . import context
 
 import asyncpg
+import aiohttp
 import importlib
 import logging
 
@@ -17,6 +18,8 @@ class DangoBot(commands.Bot):
             command_prefix=settings.COMMAND_PREFIX,
             description=settings.DESCRIPTION
         )
+
+        self.http_session = aiohttp.ClientSession(loop=self.loop)
 
         for app in settings.INSTALLED_APPS:
             try:

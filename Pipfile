@@ -12,6 +12,7 @@ django = "*"
 asyncpg = "*"
 "psycopg2-binary" = "*"
 pyyaml = "*"
+aiohttp = "*"
 
 
 [dev-packages]
