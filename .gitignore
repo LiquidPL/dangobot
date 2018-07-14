@@ -100,5 +100,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# macOS stuffs
+
+**/.DS_Store
+
 settings.py
 dangobot.log
