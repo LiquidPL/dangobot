@@ -55,3 +55,8 @@ class DangoBot(commands.Bot):
                     'INSERT INTO core_guild(id, name) VALUES ($1, $2)',
                     guild.id, guild.name
                 )
+
+    async def on_command_error(self, context, exception):
+        if isinstance(exception, commands.CommandInvokeError):
+            e = exception.original
+            logger.error('{}: {}'.format(e.__class__.__name__, e.message))
