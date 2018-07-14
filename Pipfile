@@ -1,27 +1,20 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
-"discord.py" = {git = "https://github.com/Rapptz/discord.py", ref = "rewrite", extras = ["voice"]}
+"discord.py" = {git = "https://github.com/Rapptz/discord.py", editable = true, ref = "rewrite", extras = ["voice"]}
 django = "*"
 asyncpg = "*"
 "psycopg2-binary" = "*"
 pyyaml = "*"
 
-
 [dev-packages]
-
 pylint = "*"
 pylint-django = "*"
 "pep8" = "*"
 pycodestyle = "*"
 
-
 [requires]
-
 python_version = "3.6"
