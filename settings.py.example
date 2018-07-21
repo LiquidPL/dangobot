@@ -48,3 +48,10 @@ COMMAND_PREFIX = '!'
 DESCRIPTION = 'description'
 
 BOT_TOKEN = 'actual discord api token'
+
+OWNER_ID = None
+
+# Set this to True and set the your user ID above
+# to get notified in DMs about any exceptions that
+# occur.
+SEND_ERRORS = False

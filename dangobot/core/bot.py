@@ -1,6 +1,8 @@
+from discord import Embed
 from discord.ext import commands
 from django.conf import settings
 from django.db import connection
+from .helpers import format_traceback
 
 from . import context
 
@@ -60,3 +62,32 @@ class DangoBot(commands.Bot):
         if isinstance(exception, commands.CommandInvokeError):
             e = exception.original
             logger.error('{}: {}'.format(e.__class__.__name__, e.message))
+
+            if settings.SEND_ERRORS:
+                if (
+                    not hasattr(settings, 'OWNER_ID') or
+                    not settings.OWNER_ID
+                ):
+                    logger.error(
+                        "You haven't set the owner's user ID in the "
+                        "settings file. Aborting."
+                    )
+
+                    return
+
+                owner = await self.get_user_info(settings.OWNER_ID)
+                dm = owner.dm_channel or await owner.create_dm()
+
+                traceback = format_traceback(e)
+
+                embed = Embed(
+                    title='❌ An error has occured!',
+                    color=0xff0000
+                ).add_field(
+                    name=e.__class__.__module__ +
+                    '.' + e.__class__.__qualname__,
+                    value='```{}```'.format(''.join(traceback)),
+                    inline=False
+                )
+
+                await dm.send(embed=embed)
