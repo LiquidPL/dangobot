@@ -28,6 +28,9 @@ class Commands:
 
     async def on_message(self, message):
         ctx = await self.bot.get_context(message)
+        if not ctx.guild:  # we don't want commands to work in DMs
+            return
+
         trigger = ctx.invoked_with
 
         async with self.bot.db_pool.acquire() as conn:
