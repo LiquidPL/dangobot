@@ -64,7 +64,7 @@ class DangoBot(commands.Bot):
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.CommandInvokeError):
             e = exception.original
-            logger.error('{}: {}'.format(e.__class__.__name__, e.message))
+            logger.error('{}: {}'.format(e.__class__.__name__, e))
 
             if settings.SEND_ERRORS:
                 if (
