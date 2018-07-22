@@ -63,6 +63,11 @@ class DangoBot(commands.Bot):
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.CommandInvokeError):
+            await context.send(
+                content='Sorry, an error has occured! '
+                        'The bot owner has been informed of this.'
+            )
+
             e = exception.original
             logger.error('{}: {}'.format(e.__class__.__name__, e))
 
@@ -83,6 +88,10 @@ class DangoBot(commands.Bot):
                 embed = await self.format_traceback(e)
 
                 await dm.send(embed=embed)
+        elif isinstance(exception, commands.MissingPermissions):
+            await context.send(
+                content="You don't have the permissions to do this!"
+            )
 
     async def format_traceback(self, exception):
         """

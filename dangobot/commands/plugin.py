@@ -47,19 +47,14 @@ class Commands:
                 )
 
     @commands.group(name='commands', invoke_without_command=True)
-    @commands.has_permissions(administrator=True)
     async def cmds(self, ctx):
         """
         Management of user-defined commands.
         """
         await ctx.send_help('commands')
 
-    @cmds.error
-    async def cmds_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You don't have permissions to do this!")
-
     @cmds.command()
+    @commands.has_permissions(administrator=True)
     async def add(self, ctx, trigger: str, *, response: str):
         """
         Add a new command.
@@ -86,8 +81,6 @@ class Commands:
             await ctx.send(
                 'You need to specify the {}!'.format(error.param.name)
             )
-        else:
-            await ctx.send('An error has occured!')
 
     @cmds.command()
     async def list(self, ctx):
@@ -109,10 +102,12 @@ class Commands:
         await ctx.send(content=list)
 
     @cmds.command()
+    @commands.has_permissions(administrator=True)
     async def remove(self, ctx):
         pass
 
     @cmds.command()
+    @commands.has_permissions(administrator=True)
     async def edit(self, ctx):
         pass
 
