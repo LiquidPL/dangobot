@@ -103,8 +103,28 @@ class Commands:
 
     @cmds.command()
     @commands.has_permissions(administrator=True)
-    async def remove(self, ctx):
-        pass
+    async def delete(self, ctx, trigger: str):
+        """
+        Deletes a command from the server.
+        """
+        async with self.bot.db_pool.acquire() as conn:
+            result = await conn.execute(
+                'DELETE FROM {table} '
+                'WHERE guild_id = $1 '
+                'and trigger = $2'.format(table=self.table),
+                ctx.guild.id, trigger
+            )
+
+        # the return value of a DELETE psql statement is
+        # 'DELETE <number of deleted rows>'
+        if int(result.split(' ')[1]) is 0:
+            message = 'Command `{}` does not exist!'
+        else:
+            message = 'Command `{}` deleted successfully!'
+
+        await ctx.send(
+            content=message.format(trigger)
+        )
 
     @cmds.command()
     @commands.has_permissions(administrator=True)
