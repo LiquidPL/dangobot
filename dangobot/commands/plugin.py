@@ -90,6 +90,25 @@ class Commands:
             await ctx.send('An error has occured!')
 
     @cmds.command()
+    async def list(self, ctx):
+        """
+        List all commands defined in the server.
+        """
+        async with self.bot.db_pool.acquire() as conn:
+            commands = await conn.fetch(
+                "SELECT trigger FROM {table} "
+                "WHERE guild_id = $1".format(table=self.table),
+                ctx.guild.id
+            )
+
+        list = '\n'.join(
+            map(lambda c: '  {}{}'.format(ctx.prefix, c['trigger']), commands)
+        )
+        list = '```Defined commands:\n{}```'.format(list)
+
+        await ctx.send(content=list)
+
+    @cmds.command()
     async def remove(self, ctx):
         pass
 
