@@ -2,13 +2,14 @@ from discord import Embed
 from discord.ext import commands
 from django.conf import settings
 from django.db import connection
-from .helpers import format_traceback
 
 from . import context
 
+import aiohttp
 import asyncpg
 import importlib
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,8 @@ class DangoBot(commands.Bot):
             port=connection.settings_dict['PORT']
         )
 
+        self.http_session = aiohttp.ClientSession()
+
         logger.info('Logged in as {0}'.format(self.user))
 
     async def on_guild_join(self, guild):
@@ -72,22 +75,61 @@ class DangoBot(commands.Bot):
                         "You haven't set the owner's user ID in the "
                         "settings file. Aborting."
                     )
-
                     return
 
                 owner = await self.get_user_info(settings.OWNER_ID)
                 dm = owner.dm_channel or await owner.create_dm()
 
-                traceback = format_traceback(e)
-
-                embed = Embed(
-                    title='❌ An error has occured!',
-                    color=0xff0000
-                ).add_field(
-                    name=e.__class__.__module__ +
-                    '.' + e.__class__.__qualname__,
-                    value='```{}```'.format(''.join(traceback)),
-                    inline=False
-                )
+                embed = await self.format_traceback(e)
 
                 await dm.send(embed=embed)
+
+    async def format_traceback(self, exception):
+        """
+        Format a traceback ready to be posted as a
+        Discord embed given an exception.
+        """
+        trace = traceback.format_exception(
+            exception.__class__,
+            exception,
+            exception.__traceback__
+        )
+        trace_orig = ''.join(trace)
+
+        length = sum(len(el) for el in trace)
+
+        # remove oldest traces until we're under the embed
+        # length cap, which is1000, minus 6 characters for
+        # codeblock start and end, 4 for a 3 character
+        # ellipsis (...) and a newline character
+        while length > 990:
+            element_length = len(trace[1])
+            del trace[1]
+            length = length - element_length
+
+        trace.insert(1, '...\n')
+        trace = ''.join(trace)
+
+        # upload full, unedited traceback to a pastebin
+        async with self.http_session.post(
+            'http://dpaste.com/api/v2/',
+            data={
+                'expiry_days': 21,
+                'syntax': 'py3tb',
+                'content': trace_orig
+            }
+        ) as resp:
+            trace_url = await resp.text()
+
+        return Embed(
+            title='❌ An error has occured!',
+            color=0xff0000
+        ).add_field(
+            name=exception.__class__.__module__ +
+            '.' + exception.__class__.__qualname__,
+            value='```{}```'.format(trace),
+            inline=False
+        ).add_field(
+            name='Full traceback:',
+            value=trace_url
+        )
