@@ -82,6 +82,7 @@ class Commands:
             return
 
         url = ""
+        attachment = False
         path_relative = ""
         filename = ""
 
@@ -93,6 +94,7 @@ class Commands:
 
         if len(ctx.message.attachments) > 0:
             url = ctx.message.attachments[0].url
+            attachment = True
 
         if url != "":
             filename = url.split("/")[-1]
@@ -103,7 +105,7 @@ class Commands:
             await download_file(self.bot.http_session, url, path_absolute)
 
         trigger = args[0]
-        response = " ".join(args[1:-1] if url else args[1:])
+        response = " ".join(args[1:] if attachment else args[1:-1])
 
         return [trigger, response, path_relative, filename]
 
@@ -191,8 +193,27 @@ class Commands:
 
     @cmds.command()
     @commands.has_permissions(administrator=True)
-    async def edit(self, ctx):
-        pass
+    async def edit(self, ctx, *args):
+        try:
+            params = await self.parse_command(ctx, *args)
+        except (BadArgument, DownloadError) as e:
+            await ctx.send(content=e)
+            return
+
+        async with self.bot.db_pool.acquire() as conn:
+            result = await conn.execute(
+                f"UPDATE {self.table} "
+                "SET response = $3, file = $4, original_file_name = $5"
+                "WHERE guild_id = $1 AND trigger = $2",
+                ctx.guild.id, *params
+            )
+
+        if int(result.split(" ")[1] == 0):
+            message = 'Command `{}` does not exist!'
+        else:
+            message = 'Command `{}` updated successfully!'
+
+        await ctx.send(content=message.format(params[0]))
 
 
 def setup(bot):
