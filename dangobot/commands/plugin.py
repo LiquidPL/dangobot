@@ -78,8 +78,7 @@ class Commands:
         * the fourth element is the orignal file name of the attachment.
         """
         if len(args) < 2 and len(ctx.message.attachments) < 1:
-            await ctx.send(content="No message content specified!")
-            return
+            raise BadArgument("No message content specified!")
 
         url = ""
         attachment = False
@@ -205,13 +204,14 @@ class Commands:
                 f"UPDATE {self.table} "
                 "SET response = $3, file = $4, original_file_name = $5"
                 "WHERE guild_id = $1 AND trigger = $2",
-                ctx.guild.id, *params
+                ctx.guild.id,
+                *params,
             )
 
         if int(result.split(" ")[1] == 0):
-            message = 'Command `{}` does not exist!'
+            message = "Command `{}` does not exist!"
         else:
-            message = 'Command `{}` updated successfully!'
+            message = "Command `{}` updated successfully!"
 
         await ctx.send(content=message.format(params[0]))
 
