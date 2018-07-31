@@ -12,14 +12,13 @@ django = ">=2.0,<2.1"
 asyncpg = ">=0.17,<0.18"
 "psycopg2-binary" = ">=2.7.5,<2.8"
 pyyaml = ">=3.13,<3.14"
+validators = ">=0.12.2,<0.13"
 
 
 [dev-packages]
 
-pylint = "*"
-pylint-django = "*"
-"pep8" = "*"
-pycodestyle = "*"
+black = "==18.6b4"
+"flake8" = "*"
 
 
 [requires]

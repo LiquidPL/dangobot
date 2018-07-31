@@ -106,3 +106,4 @@ venv.bak/
 
 settings.py
 dangobot.log
+media/
