@@ -13,6 +13,7 @@ asyncpg = ">=0.17,<0.18"
 "psycopg2-binary" = ">=2.7.5,<2.8"
 pyyaml = ">=3.13,<3.14"
 validators = ">=0.12.2,<0.13"
+aiohttp = ">=3.4.4,<4.0"
 
 
 [dev-packages]
