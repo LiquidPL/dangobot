@@ -8,7 +8,7 @@ name = "pypi"
 [packages]
 
 "discord.py" = {git = "https://github.com/Rapptz/discord.py", editable = true, ref = "rewrite", extras = ["voice"]}
-django = ">=2.0,<2.1"
+django = ">=2.1,<2.2"
 asyncpg = ">=0.17,<0.18"
 "psycopg2-binary" = ">=2.7.5,<2.8"
 pyyaml = ">=3.13,<3.14"
@@ -23,4 +23,4 @@ black = "==18.6b4"
 
 [requires]
 
-python_version = "3.6"
+python_version = "3.7"
