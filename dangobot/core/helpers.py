@@ -35,6 +35,32 @@ async def download_file(http_session, url, path):
                     f.close()
                     os.remove(path)
 
-                    raise DownloadError("The provided attachment is larger than 8MB!")
+                    raise DownloadError(
+                        "The provided attachment is larger than 8MB!"
+                    )
 
                 f.write(chunk)
+
+
+async def guild_fetch_or_create(db_pool, guild):
+    """
+    Attempts to fetch a guild with a given ID from the database,
+    or, if none exists, creates it.
+
+    Returns True if a guild was successfully fetched, and False otherwise.
+    """
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM core_guild WHERE id = $1", guild.id
+        )
+
+        if row is None:
+            await conn.execute(
+                "INSERT INTO core_guild(id, name) VALUES ($1, $2)",
+                guild.id,
+                guild.name,
+            )
+
+            return False
+        else:
+            return row

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import connection
 
 from . import context
+from .helpers import guild_fetch_or_create
 
 import aiohttp
 import asyncpg
@@ -18,18 +19,18 @@ class DangoBot(commands.Bot):
     def __init__(self):
         super().__init__(
             command_prefix=settings.COMMAND_PREFIX,
-            description=settings.DESCRIPTION
+            description=settings.DESCRIPTION,
         )
 
         for app in settings.INSTALLED_APPS:
             try:
                 module = importlib.import_module(app)
 
-                if getattr(module, 'is_plugin', False):
-                    self.load_extension('{app}.plugin'.format(app=app))
+                if getattr(module, "is_plugin", False):
+                    self.load_extension("{app}.plugin".format(app=app))
 
             except Exception as e:
-                logger.exception('Failed to load extension {}'.format(app))
+                logger.exception("Failed to load extension {}".format(app))
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=context.Context)
@@ -37,45 +38,46 @@ class DangoBot(commands.Bot):
 
     async def on_ready(self):
         self.db_pool = await asyncpg.create_pool(
-            database=connection.settings_dict['NAME'],
-            user=connection.settings_dict['USER'],
-            password=connection.settings_dict['PASSWORD'],
-            host=connection.settings_dict['HOST'],
-            port=connection.settings_dict['PORT']
+            database=connection.settings_dict["NAME"],
+            user=connection.settings_dict["USER"],
+            password=connection.settings_dict["PASSWORD"],
+            host=connection.settings_dict["HOST"],
+            port=connection.settings_dict["PORT"],
         )
 
         self.http_session = aiohttp.ClientSession()
 
-        logger.info('Logged in as {0}'.format(self.user))
+        logger.info("Logged in as {0}".format(self.user))
 
     async def on_guild_join(self, guild):
-        async with self.db_pool.acquire() as conn:
-            row = await conn.fetchrow(
-                'SELECT * FROM core_guild WHERE id = $1',
-                guild.id
-            )
+        await guild_fetch_or_create(self.db_pool, guild)
 
-            if row is None:
+    async def on_guild_update(self, before, after):
+        if before.name == after.name:
+            return  # we're only tracking guild names for now
+
+        row = await guild_fetch_or_create(self.db_pool, after)
+
+        if row:
+            async with self.db_pool.acquire() as conn:
                 await conn.execute(
-                    'INSERT INTO core_guild(id, name) VALUES ($1, $2)',
-                    guild.id, guild.name
+                    "UPDATE core_guild SET name = $1 WHERE id = $2",
+                    after.name,
+                    after.id,
                 )
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.CommandInvokeError):
             await context.send(
-                content='Sorry, an error has occured! '
-                        'The bot owner has been informed of this.'
+                content="Sorry, an error has occured! "
+                "The bot owner has been informed of this."
             )
 
             e = exception.original
-            logger.error('{}: {}'.format(e.__class__.__name__, e))
+            logger.error("{}: {}".format(e.__class__.__name__, e))
 
             if settings.SEND_ERRORS:
-                if (
-                    not hasattr(settings, 'OWNER_ID') or
-                    not settings.OWNER_ID
-                ):
+                if not hasattr(settings, "OWNER_ID") or not settings.OWNER_ID:
                     logger.error(
                         "You haven't set the owner's user ID in the "
                         "settings file. Aborting."
@@ -99,11 +101,9 @@ class DangoBot(commands.Bot):
         Discord embed given an exception.
         """
         trace = traceback.format_exception(
-            exception.__class__,
-            exception,
-            exception.__traceback__
+            exception.__class__, exception, exception.__traceback__
         )
-        trace_orig = ''.join(trace)
+        trace_orig = "".join(trace)
 
         length = sum(len(el) for el in trace)
 
@@ -116,29 +116,24 @@ class DangoBot(commands.Bot):
             del trace[1]
             length = length - element_length
 
-        trace.insert(1, '...\n')
-        trace = ''.join(trace)
+        trace.insert(1, "...\n")
+        trace = "".join(trace)
 
         # upload full, unedited traceback to a pastebin
         async with self.http_session.post(
-            'http://dpaste.com/api/v2/',
-            data={
-                'expiry_days': 21,
-                'syntax': 'py3tb',
-                'content': trace_orig
-            }
+            "http://dpaste.com/api/v2/",
+            data={"expiry_days": 21, "syntax": "py3tb", "content": trace_orig},
         ) as resp:
             trace_url = await resp.text()
 
-        return Embed(
-            title='❌ An error has occured!',
-            color=0xff0000
-        ).add_field(
-            name=exception.__class__.__module__ +
-            '.' + exception.__class__.__qualname__,
-            value='```{}```'.format(trace),
-            inline=False
-        ).add_field(
-            name='Full traceback:',
-            value=trace_url
+        return (
+            Embed(title="❌ An error has occured!", color=0xff0000)
+            .add_field(
+                name=exception.__class__.__module__
+                + "."
+                + exception.__class__.__qualname__,
+                value="```{}```".format(trace),
+                inline=False,
+            )
+            .add_field(name="Full traceback:", value=trace_url)
         )
