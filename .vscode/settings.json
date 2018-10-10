@@ -3,4 +3,8 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length", "79"
+    ],
+    "python.pythonPath": "/home/liquid/.local/share/virtualenvs/dangobot-W8K0Sh87/bin/python",
 }
