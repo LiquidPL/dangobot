@@ -206,6 +206,13 @@ class Commands:
 
         await ctx.send(content=message.format(trigger))
 
+    @delete.error
+    async def delete_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(
+                "You need to specify the {}!".format(error.param.name)
+            )
+
     @cmds.command()
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, *args):
