@@ -30,7 +30,9 @@ class Commands:
 
         async with self.bot.db_pool.acquire() as conn:
             command = await conn.fetchrow(
-                "SELECT * FROM {table} WHERE guild_id = $1 AND trigger = $2".format(
+                "SELECT * FROM {table} "
+                "WHERE guild_id = $1 "
+                "AND trigger = $2".format(
                     table=self.table
                 ),
                 ctx.guild.id,
@@ -42,7 +44,10 @@ class Commands:
 
             if command["file"] != "":
                 params["file"] = File(
-                    open(os.path.join(settings.MEDIA_ROOT, command["file"]), "rb"),
+                    open(
+                        os.path.join(settings.MEDIA_ROOT, command["file"]),
+                        "rb",
+                    ),
                     command["original_file_name"],
                 )
 
@@ -50,31 +55,34 @@ class Commands:
 
     async def parse_command(self, ctx, *args):
         """
-        Parse the command syntax used for the :func:`add` and :func:`edit` functions.
+        Parse the command syntax used for the :func:`add` and :func:`edit`
+        functions.
 
         The format of the command is as follows:
         * the first word is the command trigger,
-        * rest of the string is treated as the command response, until the last word
-          starts with ``attachment=``,
-        * if so, then the last word specifies a file attachment that will be a part of
-          the command.
+        * rest of the string is treated as the command response, until the last
+          word starts with ``attachment=``,
+        * if so, then the last word specifies a file attachment that will be a
+          part of the command.
 
-        The attachment is provided as an ``attachment=<url>`` parameter at the end of
-        the command. The file under the URL is then downloaded and saved in the media
-        location.
+        The attachment is provided as an ``attachment=<url>`` parameter at the
+        end of the command. The file under the URL is then downloaded and saved
+        in the media location.
 
-        This means that the command response can have a length of zero if you only
-        specify the trigger and the attachment.
+        This means that the command response can have a length of zero if you
+        only specify the trigger and the attachment.
 
-        Keep in mind that if there is an attachment provided as a part of the message
-        (as in: uploaded in Discord, not as as an URL posted in the message body), then
-        it will take precedence over the attachment posted in the command.
+        Keep in mind that if there is an attachment provided as a part of the
+        message (as in: uploaded in Discord, not as as an URL posted in the
+        message body), then it will take precedence over the attachment posted
+        in the command.
 
         Returns a three-element list where:
         * the first element is a command trigger,
         * the second element is the command response,
-        * the third element is a path to an eventual attachment (relative to the media
-          directory), if there's no attachment then it is an empty string,
+        * the third element is a path to an eventual attachment (relative to
+          the media directory), if there's no attachment then it is an empty
+          string,
         * the fourth element is the orignal file name of the attachment.
         """
         if len(args) < 2 and len(ctx.message.attachments) < 1:
@@ -89,7 +97,9 @@ class Commands:
             url = args[-1].replace("attachment=", "", 1)
 
             if not validators.url(url):
-                raise commands.BadArgument(message="The provided URL is incorrect!")
+                raise commands.BadArgument(
+                    message="The provided URL is incorrect!"
+                )
 
         if len(ctx.message.attachments) > 0:
             url = ctx.message.attachments[0].url
@@ -104,7 +114,11 @@ class Commands:
             await download_file(self.bot.http_session, url, path_absolute)
 
         trigger = args[0]
-        response = " ".join(args[1:] if attachment else args[1:-1])
+
+        if len(args) == 2:
+            response = args[1]
+        else:
+            response = " ".join(args[1:] if attachment else args[1:-1])
 
         return [trigger, response, path_relative, filename]
 
@@ -145,7 +159,9 @@ class Commands:
         ):
             await ctx.send("Command `{}` already exists!".format(ctx.args[-1]))
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("You need to specify the {}!".format(error.param.name))
+            await ctx.send(
+                "You need to specify the {}!".format(error.param.name)
+            )
 
     @cmds.command()
     async def list(self, ctx):
