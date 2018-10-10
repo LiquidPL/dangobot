@@ -1,0 +1,18 @@
+sudo: required
+language: python
+python:
+  - '3.6'
+services:
+  - docker
+script:
+  - true
+before_deploy:
+  - docker build -t dangobot .
+deploy:
+  - provider: script
+    script: bash docker_push.sh
+    on:
+      branch: master
+env:
+  global:
+    secure: W75zaOMiliA2fxGvaeP3FZPWAA2zQWcN+oL+14RBh91XZvxkU7rRGo+3nDf2NW90ccBtG8FuKdFSWWzdhSKEHaGQNm6WKZIYiTXp3P54C1MrUo2JpfiURaOv7pEEHNseAPj0eyoEGp09qX3EoTEiM4phbomuI3xhLjYM1Vw7XcMrIVbtzyxAEVxnmTt/c6KRbwGxTbtCqDa+Y9pmwDZvVgvpOS1YgYFN2VMeEfolZSuEugKvMzUuRTkTtA1CHO34VAljcDE+cmH4oKDX25KY982vLEdZ9jo2iQQEjR+/qadtr/XgfS7edAeCPNaSgzuMUfqwLvcpNXu81dnxwB2kOyDLOwWDeI5xQWQCY2Na3CrVXwKbAB/NLTibDjOcRO35TGmnc3ltMlb1o2HCyxoeex1f/5NThTthREzWHuOgbxFtX6sZ1CClcQIKpaW8dg7UXcZdDCGa3STeRQAtkhaOS+AbcrfjSU7EivlV8+hJo4ygKilGscJo9Fxi1GtCea0aY6xzEBSByNfT1K2nMiHzpOEoa+Nu2wUbuLaBli4C0aAZM9Mt1EVwTa3aazOdzQnqMqZfH077YKf9bkGQYcLp27Jh+sveO1KLbP2rq4QvhMD1Ea3nNHI3ssrbt8AFAwnDyRUJFeW33feizfX5l2V3yQ7FBrZemDriEGq8wdQSfZY=

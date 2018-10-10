@@ -20,8 +20,3 @@ aiohttp = ">=3.4.4,<4.0"
 
 black = "==18.6b4"
 "flake8" = "*"
-
-
-[requires]
-
-python_version = "3.7"
