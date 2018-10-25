@@ -134,6 +134,17 @@ class Commands:
     async def add(self, ctx, *args):
         """
         Add a new command.
+        
+        commands add TRIGGER [RESPONSE] [attachment=ATTACHMENT]
+        
+        Parameters:
+          * TRIGGER: the string that will trigger executing this command
+          * RESPONSE: the string that will be sent by this command. Can be empty.
+          * ATTACHMENT: URL to a file that will be send by this command. Can be omitted.
+          
+        Executing the command without specifying either RESPONSE or ATTACHMENT will result
+        in an error. You can also upload an attachment to Discord instead of specifying an
+        URL.
         """
         try:
             params = await self.parse_command(ctx, *args)
@@ -216,6 +227,11 @@ class Commands:
     @cmds.command()
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, *args):
+        """
+        Edit an existing command.
+        
+        Shares syntax with the add command.
+        """
         try:
             params = await self.parse_command(ctx, *args)
         except (BadArgument, DownloadError) as e:
