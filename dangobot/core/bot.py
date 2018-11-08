@@ -24,13 +24,14 @@ class DangoBot(commands.Bot):
 
         for app in settings.INSTALLED_APPS:
             try:
-                module = importlib.import_module(app)
+                spec = importlib.util.find_spec(f"{app}.plugin")
 
-                if getattr(module, "is_plugin", False):
-                    self.load_extension("{app}.plugin".format(app=app))
+                if spec:
+                    logger.info(f"Loading extension {app}")
+                    self.load_extension(f"{app}.plugin")
 
             except Exception as e:
-                logger.exception("Failed to load extension {}".format(app))
+                logger.exception(f"Failed to load extension {app}")
 
     async def process_commands(self, message):
         ctx = await self.get_context(message, cls=context.Context)
