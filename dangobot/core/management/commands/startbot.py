@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.conf import settings
 
 import logging
@@ -12,9 +12,6 @@ class Command(BaseCommand):
     help = 'Starts the bot'
 
     def __init__(self):
-        self.bot = DangoBot()
-
-    def handle(self, *args, **options):
         with open(
             os.path.join(settings.BASE_DIR, 'dangobot', 'logging.yml'), 'r'
         ) as config_file:
@@ -26,4 +23,7 @@ class Command(BaseCommand):
 
         logging.config.dictConfig(logging_config)
 
+        self.bot = DangoBot()
+
+    def handle(self, *args, **options):
         self.bot.run(settings.BOT_TOKEN)
