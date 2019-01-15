@@ -32,9 +32,7 @@ class Commands:
             command = await conn.fetchrow(
                 "SELECT * FROM {table} "
                 "WHERE guild_id = $1 "
-                "AND trigger = $2".format(
-                    table=self.table
-                ),
+                "AND trigger = $2".format(table=self.table),
                 ctx.guild.id,
                 trigger,
             )
@@ -134,17 +132,19 @@ class Commands:
     async def add(self, ctx, *args):
         """
         Add a new command.
-        
+
         commands add TRIGGER [RESPONSE] [attachment=ATTACHMENT]
-        
+
         Parameters:
           * TRIGGER: the string that will trigger executing this command
-          * RESPONSE: the string that will be sent by this command. Can be empty.
-          * ATTACHMENT: URL to a file that will be send by this command. Can be omitted.
-          
-        Executing the command without specifying either RESPONSE or ATTACHMENT will result
-        in an error. You can also upload an attachment to Discord instead of specifying an
-        URL.
+          * RESPONSE: the string that will be sent by this command. Can be
+            empty.
+          * ATTACHMENT: URL to a file that will be send by this command. Can be
+            omitted.
+
+        Executing the command without specifying either RESPONSE or ATTACHMENT
+        will resultin an error. You can also upload an attachment to Discord
+        instead of specifying an URL.
         """
         try:
             params = await self.parse_command(ctx, *args)
@@ -153,23 +153,25 @@ class Commands:
             return
 
         async with self.bot.db_pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO {table}"
-                "(guild_id, trigger, response, file, original_file_name) "
-                "VALUES ($1, $2, $3, $4, $5)".format(table=self.table),
-                ctx.guild.id,
-                *params,
-            )
+            try:
+                await conn.execute(
+                    "INSERT INTO {table}"
+                    "(guild_id, trigger, response, file, original_file_name) "
+                    "VALUES ($1, $2, $3, $4, $5)".format(table=self.table),
+                    ctx.guild.id,
+                    *params,
+                )
+            except exceptions.UniqueViolationError:
+                await ctx.send(
+                    "Command `{}` already exists!".format(ctx.args[-1])
+                )
+                return
 
         await ctx.send("Command `{}` added successfully!".format(params[0]))
 
     @add.error
     async def add_error(self, ctx, error):
-        if isinstance(error, commands.CommandInvokeError) and isinstance(
-            error.original, exceptions.UniqueViolationError
-        ):
-            await ctx.send("Command `{}` already exists!".format(ctx.args[-1]))
-        elif isinstance(error, commands.MissingRequiredArgument):
+        if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(
                 "You need to specify the {}!".format(error.param.name)
             )
@@ -229,7 +231,7 @@ class Commands:
     async def edit(self, ctx, *args):
         """
         Edit an existing command.
-        
+
         Shares syntax with the add command.
         """
         try:
