@@ -87,7 +87,6 @@ class Commands:
             raise BadArgument("No message content specified!")
 
         url = ""
-        attachment = False
         path_relative = ""
         filename = ""
 
@@ -99,9 +98,10 @@ class Commands:
                     message="The provided URL is incorrect!"
                 )
 
+            args = args[:-1]
+
         if len(ctx.message.attachments) > 0:
             url = ctx.message.attachments[0].url
-            attachment = True
 
         if url != "":
             filename = url.split("/")[-1]
@@ -112,11 +112,7 @@ class Commands:
             await download_file(self.bot.http_session, url, path_absolute)
 
         trigger = args[0]
-
-        if len(args) == 2:
-            response = args[1]
-        else:
-            response = " ".join(args[1:] if attachment else args[1:-1])
+        response = " ".join(args[1:])
 
         return [trigger, response, path_relative, filename]
 
