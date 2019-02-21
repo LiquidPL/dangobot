@@ -12,8 +12,6 @@ class Misc:
 
     @commands.command()
     async def roll(self, ctx, *, input: str):
-        result = "Roll is not valid"
-
         ans = 0
         for x in re.sub(r"\s+", "", input).split('+'):
             if x:
@@ -26,14 +24,13 @@ class Misc:
                 roll = self.roll_pattern.fullmatch(x)
 
                 if not roll:
-                    break
+                    await ctx.send('Invalid roll!')
+                    return
 
                 for i in range(int(roll.group(1))):
                     ans += random.randint(1, int(roll.group(2)))
 
-        result = ans
-
-        await ctx.send(result)
+        await ctx.send(ans)
 
 
 def setup(bot):
