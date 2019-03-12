@@ -6,7 +6,7 @@ from dangobot.core.errors import DownloadError
 from asyncpg import exceptions
 from discord import File
 from discord.ext import commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import Cog, BadArgument
 from django.conf import settings
 
 import logging
@@ -16,11 +16,12 @@ import validators
 logger = logging.getLogger(__name__)
 
 
-class Commands:
+class Commands(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.table = Command._meta.db_table
 
+    @Cog.listener()
     async def on_message(self, message):
         ctx = await self.bot.get_context(message)
         if not ctx.guild:  # we don't want commands to work in DMs

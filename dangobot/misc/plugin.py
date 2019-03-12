@@ -1,10 +1,11 @@
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 import re
 import random
 
 
-class Misc:
+class Misc(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.roll_pattern = re.compile(r"([0-9]+)d([0-9]+)")
