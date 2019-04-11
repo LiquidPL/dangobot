@@ -3,7 +3,6 @@ from discord.ext import commands
 from django.conf import settings
 from django.db import connection
 
-from . import context
 from .helpers import guild_fetch_or_create
 
 import aiohttp
@@ -30,12 +29,8 @@ class DangoBot(commands.Bot):
                     logger.info(f"Loading extension {app}")
                     self.load_extension(f"{app}.plugin")
 
-            except Exception as e:
+            except Exception:
                 logger.exception(f"Failed to load extension {app}")
-
-    async def process_commands(self, message):
-        ctx = await self.get_context(message, cls=context.Context)
-        await self.invoke(ctx)
 
     async def on_ready(self):
         self.db_pool = await asyncpg.create_pool(
@@ -85,7 +80,7 @@ class DangoBot(commands.Bot):
                     )
                     return
 
-                owner = await self.get_user_info(settings.OWNER_ID)
+                owner = await self.fetch_user(settings.OWNER_ID)
                 dm = owner.dm_channel or await owner.create_dm()
 
                 embed = await self.format_traceback(e)

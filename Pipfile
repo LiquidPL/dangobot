@@ -4,13 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"discord.py" = {git = "https://github.com/Rapptz/discord.py",editable = true,ref = "rewrite",extras = ["voice"]}
 django = ">=2.1,<2.2"
 asyncpg = ">=0.17,<0.18"
 "psycopg2-binary" = ">=2.7.5,<2.8"
 pyyaml = "==4.2b4"
 validators = ">=0.12.2,<0.13"
 aiohttp = ">=3.4.4,<4.0"
+discord-py = ">=1.0.1,<2.0"
 
 [dev-packages]
 black = "==18.6b4"
