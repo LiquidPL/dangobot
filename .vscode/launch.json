@@ -12,7 +12,7 @@
             "args":[
                 "startbot"
             ],
-            "console": "none"
+            "console": "integratedTerminal"
         },
     ]
 }
