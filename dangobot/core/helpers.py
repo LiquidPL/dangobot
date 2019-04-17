@@ -16,7 +16,7 @@ async def download_file(http_session, url, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     async with http_session.get(url) as resp:
-        if resp.status is not 200:
+        if resp.status != 200:
             if resp.status in error_msgs:
                 message = error_msgs[resp.status]
             else:
