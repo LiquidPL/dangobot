@@ -15,6 +15,7 @@ DEBUG = True
 INSTALLED_APPS = [
     'dangobot.commands',
     'dangobot.misc',
+    'dangobot.admin',
 ] + INSTALLED_APPS
 
 # Database
