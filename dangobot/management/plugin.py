@@ -1,4 +1,4 @@
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, has_permissions
 from discord.ext import commands
 
 from dangobot.core.models import Guild
@@ -13,6 +13,7 @@ class Management(Cog):
         await ctx.send_help("config")
 
     @config.command()
+    @has_permissions(administrator=True)
     async def setprefix(self, ctx, prefix: str):
         async with self.bot.db_pool.acquire() as conn:
             result = await conn.execute(
