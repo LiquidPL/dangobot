@@ -16,8 +16,10 @@ logger = logging.getLogger(__name__)
 
 class DangoBot(commands.Bot):
     def __init__(self):
+        self.prefixes = {}
+
         super().__init__(
-            command_prefix=settings.COMMAND_PREFIX,
+            command_prefix=self.command_prefix,
             description=settings.DESCRIPTION,
         )
 
@@ -31,6 +33,17 @@ class DangoBot(commands.Bot):
 
             except Exception:
                 logger.exception(f"Failed to load extension {app}")
+
+    async def command_prefix(self, bot, message):
+        if message.guild is None:
+            return settings.COMMAND_PREFIX
+
+        if message.guild.id not in self.prefixes:
+            guild = await guild_fetch_or_create(self.db_pool, message.guild)
+
+            self.prefixes[message.guild.id] = guild["command_prefix"]
+
+        return self.prefixes[message.guild.id]
 
     async def on_ready(self):
         self.db_pool = await asyncpg.create_pool(

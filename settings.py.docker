@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'dangobot.commands',
     'dangobot.misc',
     'dangobot.admin',
+    'dangobot.management',
 ] + INSTALLED_APPS
 
 # Database
