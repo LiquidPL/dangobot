@@ -120,28 +120,22 @@ class Commands(Cog):
     @commands.group(name="commands", invoke_without_command=True)
     async def cmds(self, ctx):
         """
-        Management of user-defined ommands.
+        Management of user-defined commands.
         """
         await ctx.send_help("commands")
 
-    @cmds.command()
+    @cmds.command(usage="<trigger> (<response>) (attachment=url)")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, *args):
         """
         Add a new command.
 
-        commands add TRIGGER [RESPONSE] [attachment=ATTACHMENT]
-
         Parameters:
-          * TRIGGER: the string that will trigger executing this command
-          * RESPONSE: the string that will be sent by this command. Can be
-            empty.
-          * ATTACHMENT: URL to a file that will be send by this command. Can be
-            omitted.
+          * trigger: the string that will trigger executing this command.
+          * response: the string that will be sent by this command. Can be empty.
+          * url: URL to a file that will be sent by this command. Can be omitted.
 
-        Executing the command without specifying either RESPONSE or ATTACHMENT
-        will resultin an error. You can also upload an attachment to Discord
-        instead of specifying an URL.
+        Executing the command without specifying either RESPONSE or ATTACHMENT will result in an error. You can also upload an attachment to Discord instead of specifying the URL.
         """
         try:
             params = await self.parse_command(ctx, *args)
@@ -223,7 +217,7 @@ class Commands(Cog):
                 "You need to specify the {}!".format(error.param.name)
             )
 
-    @cmds.command()
+    @cmds.command(usage="<trigger> (<response>) (attachment=url)")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, *args):
         """

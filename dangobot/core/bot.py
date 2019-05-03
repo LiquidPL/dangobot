@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import connection
 
 from .helpers import guild_fetch_or_create
+from .help import DangoHelpCommand
 
 import aiohttp
 import asyncpg
@@ -21,6 +22,7 @@ class DangoBot(commands.Bot):
         super().__init__(
             command_prefix=self.command_prefix,
             description=settings.DESCRIPTION,
+            help_command=DangoHelpCommand()
         )
 
         for app in settings.INSTALLED_APPS:
