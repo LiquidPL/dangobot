@@ -1,8 +1,6 @@
 from discord.ext.commands import Cog, has_permissions
 from discord.ext import commands
 
-from dangobot.core.models import Guild
-
 
 class Management(Cog):
     def __init__(self, bot):
@@ -15,18 +13,12 @@ class Management(Cog):
     @config.command()
     @has_permissions(administrator=True)
     async def setprefix(self, ctx, prefix: str):
-        async with self.bot.db_pool.acquire() as conn:
-            result = await conn.execute(
-                f"UPDATE {Guild._meta.db_table} "
-                "SET command_prefix = $1 "
-                "WHERE id = $2",
-                prefix,
-                ctx.guild.id,
-            )
+        if await self.bot.cache.set_prefix(prefix, guild=ctx.guild):
+            message = f"Command prefix changed to `{prefix}`."
+        else:
+            message = f"`{prefix}` is your current prefix."
 
-        if int(result.split()[1]) == 1:
-            self.bot.prefixes[ctx.guild.id] = prefix
-            await ctx.send(content=f"Command prefix changed to `{prefix}`")
+        await ctx.send(content=message)
 
 
 def setup(bot):

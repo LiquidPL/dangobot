@@ -3,6 +3,7 @@ from discord.ext import commands
 from django.conf import settings
 from django.db import connection
 
+from .guild import GuildCache
 from .helpers import guild_fetch_or_create
 from .help import DangoHelpCommand
 
@@ -40,12 +41,7 @@ class DangoBot(commands.Bot):
         if message.guild is None:
             return settings.COMMAND_PREFIX
 
-        if message.guild.id not in self.prefixes:
-            guild = await guild_fetch_or_create(self.db_pool, message.guild)
-
-            self.prefixes[message.guild.id] = guild["command_prefix"]
-
-        return self.prefixes[message.guild.id]
+        return await self.cache.get_prefix(guild=message.guild)
 
     async def on_ready(self):
         self.db_pool = await asyncpg.create_pool(
@@ -57,6 +53,7 @@ class DangoBot(commands.Bot):
         )
 
         self.http_session = aiohttp.ClientSession()
+        self.cache = GuildCache(self.db_pool)
 
         logger.info("Logged in as {0}".format(self.user))
 
