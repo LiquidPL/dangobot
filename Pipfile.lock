@@ -103,11 +103,11 @@
         },
         "django": {
             "hashes": [
-                "sha256:0fd54e4f27bc3e0b7054a11e6b3a18fa53f2373f6b2df8a22e8eadfe018970a5",
-                "sha256:f3b28084101d516f56104856761bc247f85a2a5bbd9da39d9f6197ff461b3ee4"
+                "sha256:65e2a548a52fca560cdd4e35f4fa1a79140f405af48950e59702a37e4227e958",
+                "sha256:d4244e2c9653e1349b37ab0cdf108607ba9d1e41f71d0711ac71360e4026ce94"
             ],
             "index": "pypi",
-            "version": "==2.1.8"
+            "version": "==2.1.10"
         },
         "idna": {
             "hashes": [
