@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8f24c742927ca1b5ffd81c1cd1510a9b45edf4efa1d482d093bdffa48c42fe22"
+            "sha256": "3fb1b6466c8b4888e7964e04d35ccfdbf0c6cac6befbb2242247dcd4206ed84e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -96,18 +96,18 @@
         },
         "discord-py": {
             "hashes": [
-                "sha256:7cb420731fe9c8d820401f3290957433a10169816d08805f826042941d25928e"
+                "sha256:4684733fa137cc7def18087ae935af615212e423e3dbbe3e84ef01d7ae8ed17d"
             ],
             "index": "pypi",
-            "version": "==1.0.1"
+            "version": "==1.2.3"
         },
         "django": {
             "hashes": [
-                "sha256:1a41831eace203fd1939edf899e07d7abd12ce9bafc3d9a5a63a24a8d1d12bd5",
-                "sha256:305b6c4fce9e03bb746e35780c2c4d52f29ea1669f15633cfd41bc8821c74c76"
+                "sha256:33e4bb3f3268ecc362a7bd982c7f19fff30597c749fedbc1fd3773ebb82ec38c",
+                "sha256:f4351f1f921bb6c3de03e24cdba823365fb9a79a44f607ba2560e9e3b7f16ff3"
             ],
             "index": "pypi",
-            "version": "==2.1.11"
+            "version": "==2.1.12"
         },
         "idna": {
             "hashes": [
@@ -213,10 +213,10 @@
         },
         "validators": {
             "hashes": [
-                "sha256:68e4b74889aac1270d83636cb1dbcce3d2271e291ab14023cf95e7dbfbbce09d"
+                "sha256:f6aca085caf9e13d5a0fd8ddb3afbea2541c0ca9477b1fb8098c797dd812ff64"
             ],
             "index": "pypi",
-            "version": "==0.12.4"
+            "version": "==0.12.6"
         },
         "websockets": {
             "hashes": [
@@ -300,11 +300,11 @@
         },
         "flake8": {
             "hashes": [
-                "sha256:859996073f341f2670741b51ec1e67a01da142831aa1fdc6242dbf88dffbe661",
-                "sha256:a796a115208f5c03b18f332f7c11729812c8c3ded6c46319c59b53efd3819da8"
+                "sha256:19241c1cbc971b9962473e4438a2ca19749a7dd002dd1a946eaba171b4114548",
+                "sha256:8e9dfa3cecb2400b3738a42c54c3043e821682b9c840b0448c0503f781130696"
             ],
             "index": "pypi",
-            "version": "==3.7.7"
+            "version": "==3.7.8"
         },
         "mccabe": {
             "hashes": [
