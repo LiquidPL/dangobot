@@ -11,7 +11,7 @@ ROLLS = 2
 FULL_VALUE = 3
 
 
-class Misc(Cog):
+class DnD(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.dice_pattern = re.compile(r"([0-9]+)d([0-9]+)")
@@ -91,4 +91,4 @@ class Misc(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Misc(bot))
+    bot.add_cog(DnD(bot))

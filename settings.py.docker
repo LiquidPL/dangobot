@@ -13,10 +13,10 @@ SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = True
 
 INSTALLED_APPS = [
-    'dangobot.commands',
-    'dangobot.misc',
     'dangobot.admin',
     'dangobot.management',
+    'dangobot.commands',
+    'dangobot.dnd',
 ] + INSTALLED_APPS
 
 # Database
