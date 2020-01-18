@@ -14,7 +14,7 @@ FULL_VALUE = 3
 class DnD(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.dice_pattern = re.compile(r"([0-9]+)d([0-9]+)")
+        self.dice_pattern = re.compile(r"([0-9]*)d([0-9]+)")
         self.number_pattern = re.compile(r"([0-9]+)")
 
     @commands.command()
@@ -51,7 +51,11 @@ class DnD(Cog):
                     return
 
                 roll_value = 0
-                roll_count = int(dice_match.group(1))
+
+                if not dice_match.group(1):
+                    roll_count = 1
+                else:
+                    roll_count = int(dice_match.group(1))
 
                 if roll_count > 20:
                     display_format = FULL_VALUE
