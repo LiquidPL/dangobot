@@ -22,7 +22,8 @@ class DnD(Cog):
         """
         Pen-and-paper RPG-style dice roll.
 
-        Uses standard dice notation (https://en.wikipedia.org/wiki/Dice_notation).
+        Uses standard dice notation
+        (https://en.wikipedia.org/wiki/Dice_notation).
         """
         full_value = 0
         results = []
