@@ -11,10 +11,10 @@ ROLLS = 2
 FULL_VALUE = 3
 
 
-class Misc(Cog):
+class DnD(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.dice_pattern = re.compile(r"([0-9]+)d([0-9]+)")
+        self.dice_pattern = re.compile(r"([0-9]*)d([0-9]+)")
         self.number_pattern = re.compile(r"([0-9]+)")
 
     @commands.command()
@@ -22,7 +22,8 @@ class Misc(Cog):
         """
         Pen-and-paper RPG-style dice roll.
 
-        Uses standard dice notation (https://en.wikipedia.org/wiki/Dice_notation).
+        Uses standard dice notation
+        (https://en.wikipedia.org/wiki/Dice_notation).
         """
         full_value = 0
         results = []
@@ -51,7 +52,11 @@ class Misc(Cog):
                     return
 
                 roll_value = 0
-                roll_count = int(dice_match.group(1))
+
+                if not dice_match.group(1):
+                    roll_count = 1
+                else:
+                    roll_count = int(dice_match.group(1))
 
                 if roll_count > 20:
                     display_format = FULL_VALUE
@@ -91,4 +96,4 @@ class Misc(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Misc(bot))
+    bot.add_cog(DnD(bot))
