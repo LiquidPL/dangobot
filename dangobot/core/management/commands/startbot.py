@@ -15,7 +15,7 @@ class Command(BaseCommand):
         with open(
             os.path.join(settings.BASE_DIR, 'dangobot', 'logging.yml'), 'r'
         ) as config_file:
-            logging_config = yaml.load(config_file)
+            logging_config = yaml.safe_load(config_file)
 
         if settings.DEBUG:
             for k, v in logging_config['loggers'].items():
