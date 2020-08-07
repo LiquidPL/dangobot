@@ -4,7 +4,7 @@ from dangobot.core.helpers import download_file
 from dangobot.core.errors import DownloadError
 
 from asyncpg import exceptions
-from discord import File
+from discord import File, Embed
 from discord.ext import commands
 from discord.ext.commands import Cog, BadArgument
 from django.conf import settings
@@ -136,10 +136,14 @@ class Commands(Cog):
 
         Parameters:
           * trigger: the string that will trigger executing this command.
-          * response: the string that will be sent by this command. Can be empty.
-          * url: URL to a file that will be sent by this command. Can be omitted.
+          * response: the string that will be sent by this command.
+            Can be empty.
+          * url: URL to a file that will be sent by this command.
+            Can be omitted.
 
-        Executing the command without specifying either RESPONSE or ATTACHMENT will result in an error. You can also upload an attachment to Discord instead of specifying the URL.
+        Executing the command without specifying either RESPONSE or ATTACHMENT
+        will result in an error. You can also upload an attachment to Discord
+        instead of specifying the URL.
         """
         try:
             params = await self.parse_command(ctx, *args)
@@ -178,17 +182,19 @@ class Commands(Cog):
         """
         async with self.bot.db_pool.acquire() as conn:
             commands = await conn.fetch(
-                "SELECT trigger FROM {table} "
-                "WHERE guild_id = $1".format(table=self.table),
+                f"SELECT trigger FROM {self.table} "
+                "WHERE guild_id = $1 "
+                "ORDER BY trigger ASC",
                 ctx.guild.id,
             )
 
-        list = "\n".join(
-            map(lambda c: "  {}{}".format(ctx.prefix, c["trigger"]), commands)
+        embed = Embed()
+        embed.title = "Available custom commands:"
+        embed.description = "\n".join(
+            map(lambda c: "{}{}".format(ctx.prefix, c["trigger"]), commands)
         )
-        list = "```Defined commands:\n{}```".format(list)
 
-        await ctx.send(content=list)
+        await ctx.send(embed=embed)
 
     @cmds.command()
     @commands.has_permissions(administrator=True)
