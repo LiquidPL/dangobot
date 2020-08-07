@@ -23,6 +23,9 @@ class Commands(Cog):
 
     @Cog.listener()
     async def on_message(self, message):
+        await self.process_messages(message)
+
+    async def process_messages(self, message):
         ctx = await self.bot.get_context(message)
         if not ctx.guild:  # we don't want commands to work in DMs
             return
@@ -42,6 +45,7 @@ class Commands(Cog):
             params = {"content": command["response"]}
 
             if command["file"] != "":
+                # TODO actual asynchronous file read
                 params["file"] = File(
                     open(
                         os.path.join(settings.MEDIA_ROOT, command["file"]),
