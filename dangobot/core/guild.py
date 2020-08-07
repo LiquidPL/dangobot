@@ -1,6 +1,8 @@
 from .helpers import guild_fetch_or_create
 from .models import Guild as DBGuild
 
+from django.conf import settings
+
 from dataclasses import dataclass
 from functools import wraps
 
@@ -33,8 +35,11 @@ class GuildCache:
     @_ensure_guild
     async def get_prefix(self, guild=None):
         if self.guilds[guild.id].prefix is None:
-            db_guild = await guild_fetch_or_create(self.db_pool, guild)
-            self.guilds[guild.id].prefix = db_guild["command_prefix"]
+            # putting this in cache to avoid a race condition where
+            # the prefix would be retrieved a second time before
+            # the first retrieve would put it in the database
+            self.guilds[guild.id].prefix = settings.COMMAND_PREFIX
+            await guild_fetch_or_create(self.db_pool, guild)
 
         return self.guilds[guild.id].prefix
 
