@@ -20,10 +20,11 @@ class DnD(Cog):
     @commands.command()
     async def roll(self, ctx, *, input: str):
         """
-        Pen-and-paper RPG-style dice roll.
+        Roll a variable amount of dice, commonly used in\
+        tabletop/pen-and-paper RPG games.
 
-        Uses standard dice notation
-        (https://en.wikipedia.org/wiki/Dice_notation).
+        Uses [standard dice\
+        notation](https://en.wikipedia.org/wiki/Dice_notation).
         """
         full_value = 0
         results = []

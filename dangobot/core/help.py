@@ -2,6 +2,7 @@ from discord.ext.commands import HelpCommand
 from discord import Embed
 
 import itertools
+import re
 
 
 class DangoHelpCommand(HelpCommand):
@@ -42,7 +43,7 @@ class DangoHelpCommand(HelpCommand):
 
             self.embed.add_field(
                 name=cog.qualified_name if cog else self.no_category,
-                value=description,
+                value=self.process_newlines(description),
                 inline=False,
             )
 
@@ -52,7 +53,7 @@ class DangoHelpCommand(HelpCommand):
         self.embed.title = cog.qualified_name
 
         if cog.description:
-            self.embed.description = cog.description
+            self.embed.description = self.process_newlines(cog.description)
 
         commands = await self.filter_commands(
             cog.get_commands(), sort=self.sort_commands
@@ -90,7 +91,7 @@ class DangoHelpCommand(HelpCommand):
 
     def format_command(self, command):
         self.embed.title = self.get_command_signature(command)
-        self.embed.description = (
+        self.embed.description = self.process_newlines(
             f"{command.description}\n{self.command_help(command)}"
         )
 
@@ -109,3 +110,10 @@ class DangoHelpCommand(HelpCommand):
 
     async def send_embed(self):
         await self.get_destination().send(embed=self.embed)
+
+    def process_newlines(self, string):
+        """
+        Makes the docstrings used for command help descriptions more conformant
+        with Markdown (in this case the backslash creating a line break).
+        """
+        return re.sub(r"\\\n", "", string)

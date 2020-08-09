@@ -135,10 +135,11 @@ class Commands(Cog):
         Add a new command.
 
         Parameters:
+
           * trigger: the string that will trigger executing this command.
-          * response: the string that will be sent by this command.
+          * response: the string that will be sent by this command.\
             Can be empty.
-          * url: URL to a file that will be sent by this command.
+          * url: URL to a file that will be sent by this command.\
             Can be omitted.
 
         Executing the command without specifying either RESPONSE or ATTACHMENT
@@ -233,7 +234,7 @@ class Commands(Cog):
         """
         Edit an existing command.
 
-        Shares syntax with the add command.
+        Has the same parameters as the add command.
         """
         try:
             params = await self.parse_command(ctx, *args)
