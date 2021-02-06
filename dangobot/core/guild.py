@@ -1,15 +1,19 @@
-from .helpers import guild_fetch_or_create
-from .models import Guild as DBGuild
-
-from django.conf import settings
-
 from dataclasses import dataclass
 from functools import wraps
 
+from django.conf import settings
+
 from discord import Guild
+
+from .helpers import guild_fetch_or_create
+from .models import Guild as DBGuild
 
 
 def _ensure_guild(func):
+    """
+    An annotation that ensures that the `guild` argument of the annotated
+    function is of the :class:`~discord.Guild` type.
+    """
     @wraps(func)
     async def wrapper(self, *args, **kwargs):
         if "guild" not in kwargs:
@@ -28,12 +32,17 @@ def _ensure_guild(func):
 
 
 class GuildCache:
+    """
+    A class serving as an in-memory cache for important guild configuration.
+    """
+    # TODO: refactor this into a repository
     def __init__(self, db_pool):
         self.db_pool = db_pool
         self.guilds = {}
 
     @_ensure_guild
     async def get_prefix(self, guild=None):
+        """Gets the command prefix for a given guild."""
         if self.guilds[guild.id].prefix is None:
             # putting this in cache to avoid a race condition where
             # the prefix would be retrieved a second time before
@@ -45,6 +54,7 @@ class GuildCache:
 
     @_ensure_guild
     async def set_prefix(self, prefix, guild=None):
+        """Sets a new command prefix for a given guild."""
         if prefix == self.guilds[guild.id].prefix:
             return False
 
@@ -64,5 +74,5 @@ class GuildCache:
 
 @dataclass
 class _Guild:
-    id: int
+    id: int  # pylint: disable=invalid-name
     prefix: str = None

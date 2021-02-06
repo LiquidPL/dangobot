@@ -3,3 +3,5 @@ exclude =
     settings.py,
     __pycache__,
     dangobot/**/migrations
+
+ignore = E501,W503

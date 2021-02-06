@@ -1,15 +1,18 @@
-from django.db import models
-
 import uuid
+
+from django.db import models
 
 
 def file_path(instance, filename):
+    """Returns the path in which the command attachments should be stored."""
+
     return "commands/{guild_id}/{id}_{trigger}".format(
         guild_id=instance.guild.id, id=uuid.uuid4(), trigger=filename
     )
 
 
 class Command(models.Model):
+    """Stores custom commmands configured by the users."""
     guild = models.ForeignKey("core.Guild", on_delete=models.CASCADE)
     trigger = models.TextField(max_length=2000)
     response = models.TextField(max_length=2000, blank=True)

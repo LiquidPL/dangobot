@@ -1,7 +1,11 @@
 [MASTER]
-
 ignore=.git,_pycache__,migrations,settings.py,base_settings.py
 
-[MESSAGES CONTROL]
+load-plugins=pylint_django
+django-settings-module=settings
 
-disable=missing-module-docstring
+[MESSAGES CONTROL]
+disable=missing-module-docstring,fixme
+
+[FORMAT]
+max-line-length=79

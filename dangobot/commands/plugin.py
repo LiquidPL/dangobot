@@ -1,7 +1,5 @@
-from .models import Command, file_path
-
-from dangobot.core.helpers import download_file
-from dangobot.core.errors import DownloadError
+import logging
+import os
 
 from asyncpg import exceptions
 from discord import File, Embed
@@ -9,23 +7,42 @@ from discord.ext import commands
 from discord.ext.commands import Cog, BadArgument
 from django.conf import settings
 
-import logging
-import os
 import validators
+
+from dangobot.core.helpers import download_file
+from dangobot.core.errors import DownloadError
+
+from .models import Command, file_path
+
 
 logger = logging.getLogger(__name__)
 
 
 class Commands(Cog):
+    """A plugin for configuring custom user-made bot commands."""
+
     def __init__(self, bot):
         self.bot = bot
         self.table = Command._meta.db_table
 
     @Cog.listener()
-    async def on_message(self, message):
+    async def on_message(
+        self, message
+    ):  # pylint: disable=missing-function-docstring
         await self.process_messages(message)
 
     async def process_messages(self, message):
+        """
+        The main custom message handler.
+
+        Handles all incoming messages, finds any command invocations,
+        and checks if there's a custom command defined with the given name.
+        If it exists, its contents are pulled from the database, and sent to
+        the target channel.
+
+        Arguments:
+            message (string): the incoming message
+        """
         ctx = await self.bot.get_context(message)
         if not ctx.guild:  # we don't want commands to work in DMs
             return
@@ -148,8 +165,8 @@ class Commands(Cog):
         """
         try:
             params = await self.parse_command(ctx, *args)
-        except (BadArgument, DownloadError) as e:
-            await ctx.send(content=e)
+        except (BadArgument, DownloadError) as exc:
+            await ctx.send(content=exc)
             return
 
         async with self.bot.db_pool.acquire() as conn:
@@ -170,7 +187,9 @@ class Commands(Cog):
         await ctx.send("Command `{}` added successfully!".format(params[0]))
 
     @add.error
-    async def add_error(self, ctx, error):
+    async def add_error(
+        self, ctx, error
+    ):  # pylint: disable=missing-function-docstring
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(
                 "You need to specify the {}!".format(error.param.name)
@@ -182,7 +201,7 @@ class Commands(Cog):
         List all commands defined in the server.
         """
         async with self.bot.db_pool.acquire() as conn:
-            commands = await conn.fetch(
+            command_list = await conn.fetch(
                 f"SELECT trigger FROM {self.table} "
                 "WHERE guild_id = $1 "
                 "ORDER BY trigger ASC",
@@ -192,7 +211,9 @@ class Commands(Cog):
         embed = Embed()
         embed.title = "Available custom commands:"
         embed.description = "\n".join(
-            map(lambda c: "{}{}".format(ctx.prefix, c["trigger"]), commands)
+            map(
+                lambda c: "{}{}".format(ctx.prefix, c["trigger"]), command_list
+            )
         )
 
         await ctx.send(embed=embed)
@@ -222,7 +243,9 @@ class Commands(Cog):
         await ctx.send(content=message.format(trigger))
 
     @delete.error
-    async def delete_error(self, ctx, error):
+    async def delete_error(
+        self, ctx, error
+    ):  # pylint: disable=missing-function-docstring
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(
                 "You need to specify the {}!".format(error.param.name)
@@ -238,8 +261,8 @@ class Commands(Cog):
         """
         try:
             params = await self.parse_command(ctx, *args)
-        except (BadArgument, DownloadError) as e:
-            await ctx.send(content=e)
+        except (BadArgument, DownloadError) as exc:
+            await ctx.send(content=exc)
             return
 
         async with self.bot.db_pool.acquire() as conn:
@@ -259,5 +282,5 @@ class Commands(Cog):
         await ctx.send(content=message.format(params[0]))
 
 
-def setup(bot):
+def setup(bot):  # pylint: disable=missing-function-docstring
     bot.add_cog(Commands(bot))

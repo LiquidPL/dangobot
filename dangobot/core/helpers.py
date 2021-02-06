@@ -1,9 +1,9 @@
-from .errors import DownloadError
+import os
 
 from discord import Guild
 from django.conf import settings
 
-import os
+from .errors import DownloadError
 
 
 async def download_file(http_session, url, path):
@@ -27,7 +27,7 @@ async def download_file(http_session, url, path):
 
             raise DownloadError(message)
 
-        with open(path, "wb") as f:
+        with open(path, "wb") as file:
             while True:
                 chunk = await resp.content.read(1024)
                 if not chunk:
@@ -35,17 +35,21 @@ async def download_file(http_session, url, path):
 
                 file_size = file_size + chunk_size
                 if file_size > 8 * 2 ** 20:  # 8 MiB
-                    f.close()
+                    file.close()
                     os.remove(path)
 
                     raise DownloadError(
                         "The provided attachment is larger than 8MB!"
                     )
 
-                f.write(chunk)
+                file.write(chunk)
 
 
 async def guild_fetch(db_pool, guild: Guild):
+    """
+    Attempts to fetch a guild with a given ID from the database.
+    """
+    # TODO: move this to a repository
     async with db_pool.acquire() as conn:
         return await conn.fetchrow(
             "SELECT * FROM core_guild WHERE id = $1", guild.id
@@ -59,6 +63,7 @@ async def guild_fetch_or_create(db_pool, guild: Guild):
 
     Returns True if a guild was successfully fetched, and False otherwise.
     """
+    # TODO: move this to a repository
     row = await guild_fetch(db_pool, guild)
 
     if row is None:

@@ -1,21 +1,22 @@
-from discord.ext.commands import HelpCommand
-from discord import Embed
-
 import itertools
 import re
 
+from discord.ext.commands import HelpCommand
+from discord import Embed
 
-class DangoHelpCommand(HelpCommand):
+
+class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
     def __init__(self, **options):
         self.sort_commands = options.pop("sort_commands", True)
         self.commands_heading = options.pop(
             "commands_heading", "Available commands:"
         )
         self.no_category = options.pop("no_category", "No category")
+        self.embed = None
 
         super().__init__(**options)
 
-    async def prepare_help_command(self, ctx, command):
+    async def prepare_help_command(self, ctx, command=None):
         self.embed = Embed()
 
         await super().prepare_help_command(ctx, command)
@@ -78,24 +79,15 @@ class DangoHelpCommand(HelpCommand):
         self.format_command(command)
         await self.send_embed()
 
-    def command_help(self, command, brief=False):
-        help = command.help
-
-        if brief:
-            help = command.short_doc
-
-        if help == "":
-            help = "No help message specified."
-
-        return help
-
     def format_command(self, command):
+        """Formats the help text for the given command."""
         self.embed.title = self.get_command_signature(command)
         self.embed.description = self.process_newlines(
             f"{command.description}\n{self.command_help(command)}"
         )
 
     def add_commands(self, commands):
+        """Adds help text for commands in the argument to the embed."""
         if self.embed.description:
             self.embed.description += f"\n\n{self.commands_heading}"
         else:
@@ -109,9 +101,30 @@ class DangoHelpCommand(HelpCommand):
             )
 
     async def send_embed(self):
+        """Sends the embed to its target destination."""
         await self.get_destination().send(embed=self.embed)
 
-    def process_newlines(self, string):
+    @staticmethod
+    def command_help(command, brief=False):
+        """
+        Returns the help text for a given command.
+
+        Arguments:
+            brief (bool): Whether it should return the brief or full version
+                    of the help text.
+        """
+        help_text = command.help
+
+        if brief:
+            help_text = command.short_doc
+
+        if help_text == "":
+            help_text = "No help message specified."
+
+        return help_text
+
+    @staticmethod
+    def process_newlines(string):
         """
         Makes the docstrings used for command help descriptions more conformant
         with Markdown (in this case the backslash creating a line break).

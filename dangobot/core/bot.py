@@ -18,11 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class DangoBot(commands.Bot):
+    """The core bot class."""
+
     def __init__(self):
         super().__init__(
             command_prefix=self.get_command_prefix,
             description=settings.DESCRIPTION,
-            help_command=DangoHelpCommand()
+            help_command=DangoHelpCommand(),
         )
 
         self.db_pool = None
@@ -41,12 +43,16 @@ class DangoBot(commands.Bot):
                 logger.exception("Failed to load extension %s", app)
 
     async def get_command_prefix(self, message):
+        """
+        Gets the command prefix used by the guild that this message
+        originated from.
+        """
         if message.guild is None:
             return settings.COMMAND_PREFIX
 
         return await self.cache.get_prefix(guild=message.guild)
 
-    async def on_ready(self):
+    async def on_ready(self):  # pylint: disable=missing-function-docstring
         self.db_pool = await asyncpg.create_pool(
             database=connection.settings_dict["NAME"],
             user=connection.settings_dict["USER"],
@@ -58,12 +64,16 @@ class DangoBot(commands.Bot):
         self.http_session = aiohttp.ClientSession()
         self.cache = GuildCache(self.db_pool)
 
-        logger.info("Logged in as {0}".format(self.user))
+        logger.info("Logged in as %s", self.user)
 
-    async def on_guild_join(self, guild):
+    async def on_guild_join(
+        self, guild
+    ):  # pylint: disable=missing-function-docstring
         await guild_fetch_or_create(self.db_pool, guild)
 
-    async def on_guild_update(self, before, after):
+    async def on_guild_update(
+        self, before, after
+    ):  # pylint: disable=missing-function-docstring:
         if before.name == after.name:
             return  # we're only tracking guild names for now
 
@@ -96,11 +106,11 @@ class DangoBot(commands.Bot):
                     return
 
                 owner = await self.fetch_user(settings.OWNER_ID)
-                dm = owner.dm_channel or await owner.create_dm()
+                dm_channel = owner.dm_channel or await owner.create_dm()
 
                 embed = await self.format_traceback(exc)
 
-                await dm.send(embed=embed)
+                await dm_channel.send(embed=embed)
         elif isinstance(exception, commands.MissingPermissions):
             await context.send(
                 content="You don't have the permissions to do this!"

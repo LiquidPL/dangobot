@@ -12,11 +12,13 @@ ROLLS = 2
 FULL_VALUE = 3
 
 
+# pylint: disable=too-many-locals,too-many-branches
 class DnD(Cog):
     """
     Contains functionality related to tabletop/pen-and-paper role-playing
     games.
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.dice_pattern = re.compile(r"([0-9]*)d([0-9]+)")
