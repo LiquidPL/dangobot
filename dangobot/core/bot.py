@@ -1,43 +1,46 @@
+import importlib
+import logging
+import traceback
+
 from discord import Embed
 from discord.ext import commands
 from django.conf import settings
 from django.db import connection
 
+import aiohttp
+import asyncpg
+
 from .guild import GuildCache
 from .helpers import guild_fetch_or_create
 from .help import DangoHelpCommand
-
-import aiohttp
-import asyncpg
-import importlib
-import logging
-import traceback
 
 logger = logging.getLogger(__name__)
 
 
 class DangoBot(commands.Bot):
     def __init__(self):
-        self.prefixes = {}
-
         super().__init__(
-            command_prefix=self.command_prefix,
+            command_prefix=self.get_command_prefix,
             description=settings.DESCRIPTION,
             help_command=DangoHelpCommand()
         )
+
+        self.db_pool = None
+        self.http_session = None
+        self.cache = None
 
         for app in settings.INSTALLED_APPS:
             try:
                 spec = importlib.util.find_spec(f"{app}.plugin")
 
                 if spec:
-                    logger.info(f"Loading extension {app}")
+                    logger.info("Loading extension %s", app)
                     self.load_extension(f"{app}.plugin")
 
-            except Exception:
-                logger.exception(f"Failed to load extension {app}")
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Failed to load extension %s", app)
 
-    async def command_prefix(self, bot, message):
+    async def get_command_prefix(self, message):
         if message.guild is None:
             return settings.COMMAND_PREFIX
 
@@ -81,8 +84,8 @@ class DangoBot(commands.Bot):
                 "The bot owner has been informed of this."
             )
 
-            e = exception.original
-            logger.error("{}: {}".format(e.__class__.__name__, e))
+            exc = exception.original
+            logger.error("%s: %s", exc.__class__.__name__, exc)
 
             if settings.SEND_ERRORS:
                 if not hasattr(settings, "OWNER_ID") or not settings.OWNER_ID:
@@ -95,7 +98,7 @@ class DangoBot(commands.Bot):
                 owner = await self.fetch_user(settings.OWNER_ID)
                 dm = owner.dm_channel or await owner.create_dm()
 
-                embed = await self.format_traceback(e)
+                embed = await self.format_traceback(exc)
 
                 await dm.send(embed=embed)
         elif isinstance(exception, commands.MissingPermissions):

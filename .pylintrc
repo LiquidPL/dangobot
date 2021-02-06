@@ -1,0 +1,7 @@
+[MASTER]
+
+ignore=.git,_pycache__,migrations,settings.py,base_settings.py
+
+[MESSAGES CONTROL]
+
+disable=missing-module-docstring

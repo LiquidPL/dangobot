@@ -1,10 +1,11 @@
+import re
+import random
+
 from discord.ext import commands
 from discord.ext.commands import Cog
 
 from discord import Embed
 
-import re
-import random
 
 DICES = 1
 ROLLS = 2
@@ -12,16 +13,20 @@ FULL_VALUE = 3
 
 
 class DnD(Cog):
+    """
+    Contains functionality related to tabletop/pen-and-paper role-playing
+    games.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.dice_pattern = re.compile(r"([0-9]*)d([0-9]+)")
         self.number_pattern = re.compile(r"([0-9]+)")
 
     @commands.command()
-    async def roll(self, ctx, *, input: str):
+    async def roll(self, ctx, *, dice_string: str):
         """
         Roll a variable amount of dice, commonly used in\
-        tabletop/pen-and-paper RPG games.
+        tabletop/pen-and-paper role-playing games.
 
         Uses [standard dice\
         notation](https://en.wikipedia.org/wiki/Dice_notation).
@@ -29,7 +34,7 @@ class DnD(Cog):
         full_value = 0
         results = []
 
-        rolls = re.sub(r"\s+", "", input).split("+")
+        rolls = re.sub(r"\s+", "", dice_string).split("+")
 
         if len(rolls) > 20:
             display_format = FULL_VALUE
@@ -75,12 +80,18 @@ class DnD(Cog):
 
                 full_value += roll_value
 
-        embed = Embed(title=f"Rolling {input}")
+        embed = Embed(title=f"Rolling {dice_string}")
+
+        def roll_string(style):
+            if style == DICES:
+                return "Dice {}"
+
+            return "Roll {}"
 
         if not display_format == FULL_VALUE:
             for i, result in enumerate(results, start=1):
                 embed.add_field(
-                    name=self.roll_string(display_format).format(i),
+                    name=roll_string(display_format).format(i),
                     value=result,
                     inline=True,
                 )
@@ -89,12 +100,6 @@ class DnD(Cog):
 
         await ctx.send(embed=embed)
 
-    def roll_string(self, format):
-        if format == DICES:
-            return "Dice {}"
-        else:
-            return "Roll {}"
 
-
-def setup(bot):
+def setup(bot):  # pylint: disable=missing-function-docstring
     bot.add_cog(DnD(bot))
