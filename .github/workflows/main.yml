@@ -2,6 +2,11 @@ name: Main
 
 on: [push, pull_request]
 
+env:
+  # CI only secrets in order to allow django to boot, not used anywhere else
+  SECRET_KEY: '1234567890abcd'
+  BOT_TOKEN: '1234567890abcd'
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -20,7 +25,11 @@ jobs:
 
       - name: Install dependencies
         run:
-          pipenv sync --system --dev
+          pipenv install --system --deploy --dev
+
+      - name: Install the settings file
+        run:
+          cp settings.py.docker settings.py
 
       - name: Run flake8 linting
         run: flake8
