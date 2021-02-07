@@ -1,4 +1,4 @@
-FROM python:3.8-alpine as build
+FROM python:3.9-alpine as build
 
 RUN pip install pipenv
 
@@ -12,7 +12,9 @@ COPY Pipfile* /dangobot/
 
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
 
-FROM python:3.8-alpine as base
+FROM python:3.9-alpine as base
+
+LABEL org.opencontainers.image.source=https://github.com/LiquidPL/dangobot
 
 RUN pip install --no-cache-dir pipenv
 RUN apk add --update musl libc6-compat ca-certificates libffi libpq shadow \
