@@ -42,7 +42,9 @@ class DangoBot(commands.Bot):
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Failed to load extension %s", app)
 
-    async def get_command_prefix(self, message):
+    async def get_command_prefix(
+        self, bot, message
+    ):  # pylint: disable=unused-argument
         """
         Gets the command prefix used by the guild that this message
         originated from.
