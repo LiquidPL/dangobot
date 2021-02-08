@@ -7,6 +7,7 @@ from discord import Guild
 
 from .helpers import guild_fetch_or_create
 from .models import Guild as DBGuild
+from .database import db_pool
 
 
 def _ensure_guild(func):
@@ -14,6 +15,7 @@ def _ensure_guild(func):
     An annotation that ensures that the `guild` argument of the annotated
     function is of the :class:`~discord.Guild` type.
     """
+
     @wraps(func)
     async def wrapper(self, *args, **kwargs):
         if "guild" not in kwargs:
@@ -28,6 +30,7 @@ def _ensure_guild(func):
             self.guilds[guild.id] = _Guild(id)
 
         return await func(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -35,9 +38,9 @@ class GuildCache:
     """
     A class serving as an in-memory cache for important guild configuration.
     """
+
     # TODO: refactor this into a repository
-    def __init__(self, db_pool):
-        self.db_pool = db_pool
+    def __init__(self):
         self.guilds = {}
 
     @_ensure_guild
@@ -48,7 +51,7 @@ class GuildCache:
             # the prefix would be retrieved a second time before
             # the first retrieve would put it in the database
             self.guilds[guild.id].prefix = settings.COMMAND_PREFIX
-            await guild_fetch_or_create(self.db_pool, guild)
+            await guild_fetch_or_create(guild)
 
         return self.guilds[guild.id].prefix
 
@@ -58,7 +61,7 @@ class GuildCache:
         if prefix == self.guilds[guild.id].prefix:
             return False
 
-        async with self.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             result = await conn.execute(
                 f"UPDATE {DBGuild._meta.db_table} "
                 "SET command_prefix = $1 "

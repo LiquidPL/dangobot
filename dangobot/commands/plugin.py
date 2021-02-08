@@ -10,8 +10,9 @@ from django.conf import settings
 import validators
 
 from dangobot.core.cog import Cog
-from dangobot.core.helpers import download_file
+from dangobot.core.database import db_pool
 from dangobot.core.errors import DownloadError
+from dangobot.core.helpers import download_file
 
 from .models import Command, file_path
 
@@ -51,7 +52,7 @@ class Commands(Cog):
 
         trigger = ctx.invoked_with
 
-        async with self.bot.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             command = await conn.fetchrow(
                 "SELECT * FROM {table} "
                 "WHERE guild_id = $1 "
@@ -171,7 +172,7 @@ class Commands(Cog):
             await ctx.send(content=exc)
             return
 
-        async with self.bot.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             try:
                 await conn.execute(
                     "INSERT INTO {table}"
@@ -202,7 +203,7 @@ class Commands(Cog):
         """
         List all commands defined in the server.
         """
-        async with self.bot.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             command_list = await conn.fetch(
                 f"SELECT trigger FROM {self.table} "
                 "WHERE guild_id = $1 "
@@ -226,7 +227,7 @@ class Commands(Cog):
         """
         Deletes a command from the server.
         """
-        async with self.bot.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             result = await conn.execute(
                 "DELETE FROM {table} "
                 "WHERE guild_id = $1 "
@@ -267,7 +268,7 @@ class Commands(Cog):
             await ctx.send(content=exc)
             return
 
-        async with self.bot.db_pool.acquire() as conn:
+        async with db_pool.acquire() as conn:
             result = await conn.execute(
                 f"UPDATE {self.table} "
                 "SET response = $3, file = $4, original_file_name = $5"

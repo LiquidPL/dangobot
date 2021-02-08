@@ -5,14 +5,16 @@ import traceback
 from discord import Embed
 from discord.ext import commands
 from django.conf import settings
-from django.db import connection
 
 import aiohttp
-import asyncpg
+
+from dangobot import loop
 
 from .guild import GuildCache
 from .helpers import guild_fetch_or_create
 from .help import DangoHelpCommand
+from .database import db_pool
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +24,12 @@ class DangoBot(commands.Bot):
 
     def __init__(self):
         super().__init__(
+            loop=loop,
             command_prefix=self.get_command_prefix,
             description=settings.DESCRIPTION,
             help_command=DangoHelpCommand(),
         )
 
-        self.db_pool = None
         self.http_session = None
         self.cache = None
 
@@ -55,23 +57,15 @@ class DangoBot(commands.Bot):
         return await self.cache.get_prefix(guild=message.guild)
 
     async def on_ready(self):  # pylint: disable=missing-function-docstring
-        self.db_pool = await asyncpg.create_pool(
-            database=connection.settings_dict["NAME"],
-            user=connection.settings_dict["USER"],
-            password=connection.settings_dict["PASSWORD"],
-            host=connection.settings_dict["HOST"],
-            port=connection.settings_dict["PORT"],
-        )
-
         self.http_session = aiohttp.ClientSession()
-        self.cache = GuildCache(self.db_pool)
+        self.cache = GuildCache()
 
         logger.info("Logged in as %s", self.user)
 
     async def on_guild_join(
         self, guild
     ):  # pylint: disable=missing-function-docstring
-        await guild_fetch_or_create(self.db_pool, guild)
+        await guild_fetch_or_create(guild)
 
     async def on_guild_update(
         self, before, after
@@ -79,10 +73,10 @@ class DangoBot(commands.Bot):
         if before.name == after.name:
             return  # we're only tracking guild names for now
 
-        row = await guild_fetch_or_create(self.db_pool, after)
+        row = await guild_fetch_or_create(after)
 
         if row:
-            async with self.db_pool.acquire() as conn:
+            async with db_pool.acquire() as conn:
                 await conn.execute(
                     "UPDATE core_guild SET name = $1 WHERE id = $2",
                     after.name,

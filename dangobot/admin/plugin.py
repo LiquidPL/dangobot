@@ -30,7 +30,7 @@ class Admin(Cog):
         Forces the bot to fetch a guild from the gateway and create an entry\
         for it in the database.
         """
-        await guild_fetch_or_create(self.bot.db_pool, ctx.guild)
+        await guild_fetch_or_create(ctx.guild)
         await ctx.send(content=f"Reset guild {ctx.guild.name}")
 
     @commands.command(hidden=True, rest_as_raw=False)
