@@ -128,24 +128,25 @@ class DangoBot(commands.Bot):
         )
         trace_orig = "".join(trace)
 
-        length = sum(len(el) for el in trace)
+        length = len(trace_orig)
 
-        # remove oldest traces until we're under the embed
-        # length cap, which is1000, minus 6 characters for
-        # codeblock start and end, 4 for a 3 character
-        # ellipsis (...) and a newline character
+        # remove oldest traces until we're under the embed length cap,
+        # which is 1000, minus 6 characters for codeblock start and end,
+        # 4 for a 3 character ellipsis (...) and a newline character
         while length > 990:
             element_length = len(trace[1])
             del trace[1]
-            length = length - element_length
+            length -= element_length
 
-        trace.insert(1, "...\n")
+        if len(trace_orig) > 990:
+            trace.insert(1, "...\n")
+
         trace = "".join(trace)
 
         # upload full, unedited traceback to a pastebin
         async with self.http_session.post(
             "http://dpaste.com/api/v2/",
-            data={"expiry_days": 21, "syntax": "py3tb", "content": trace_orig},
+            data={"expiry_days": 21, "syntax": "pytb", "content": trace_orig},
         ) as resp:
             trace_url = await resp.text()
 
