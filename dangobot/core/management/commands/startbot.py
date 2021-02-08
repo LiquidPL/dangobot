@@ -5,21 +5,21 @@ import logging
 import os
 import yaml
 
-from ...bot import DangoBot
+from dangobot.core.bot import DangoBot
 
 
 class Command(BaseCommand):
-    help = 'Starts the bot'
+    help = "Starts the bot"
 
     def __init__(self):
         with open(
-            os.path.join(settings.BASE_DIR, 'dangobot', 'logging.yml'), 'r'
+            os.path.join(settings.BASE_DIR, "dangobot", "logging.yml"), "r"
         ) as config_file:
             logging_config = yaml.safe_load(config_file)
 
         if settings.DEBUG:
-            for k, v in logging_config['loggers'].items():
-                logging_config['loggers'][k]['handlers'].append('console')
+            for k, v in logging_config["loggers"].items():
+                logging_config["loggers"][k]["handlers"].append("console")
 
         logging.config.dictConfig(logging_config)
 

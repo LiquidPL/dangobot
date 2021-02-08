@@ -1,10 +1,10 @@
 import re
 import random
 
-from discord.ext import commands
-from discord.ext.commands import Cog
-
 from discord import Embed
+from discord.ext import commands
+
+from dangobot.core.cog import Cog
 
 
 DICES = 1
@@ -20,7 +20,8 @@ class DnD(Cog):
     """
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+
         self.dice_pattern = re.compile(r"([0-9]*)d([0-9]+)")
         self.number_pattern = re.compile(r"([0-9]+)")
 

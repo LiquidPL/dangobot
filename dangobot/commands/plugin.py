@@ -4,11 +4,12 @@ import os
 from asyncpg import exceptions
 from discord import File, Embed
 from discord.ext import commands
-from discord.ext.commands import Cog, BadArgument
+from discord.ext.commands import BadArgument
 from django.conf import settings
 
 import validators
 
+from dangobot.core.cog import Cog
 from dangobot.core.helpers import download_file
 from dangobot.core.errors import DownloadError
 
@@ -22,7 +23,8 @@ class Commands(Cog):
     """A plugin for configuring custom user-made bot commands."""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+
         self.table = Command._meta.db_table
 
     @Cog.listener()

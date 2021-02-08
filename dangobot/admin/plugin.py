@@ -1,5 +1,4 @@
 from discord.ext.commands import (
-    Cog,
     Context,
     is_owner,
     NoPrivateMessage,
@@ -9,17 +8,14 @@ from discord.ext.commands import (
 from discord.ext import commands
 from discord import TextChannel, DMChannel
 
+from dangobot.core.cog import Cog
 from dangobot.core.helpers import guild_fetch_or_create
-from dangobot.core.bot import DangoBot
 
 
 class Admin(Cog):
     """
     Contains commands useful to server (and bot) administrators.
     """
-
-    def __init__(self, bot: DangoBot):
-        self.bot = bot
 
     @commands.group(hidden=True)
     @is_owner()

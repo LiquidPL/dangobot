@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 
+from dangobot.core.models import Guild
+
 
 def file_path(instance, filename):
     """Returns the path in which the command attachments should be stored."""
@@ -13,7 +15,8 @@ def file_path(instance, filename):
 
 class Command(models.Model):
     """Stores custom commmands configured by the users."""
-    guild = models.ForeignKey("core.Guild", on_delete=models.CASCADE)
+
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
     trigger = models.TextField(max_length=2000)
     response = models.TextField(max_length=2000, blank=True)
     file = models.FileField(upload_to=file_path, max_length=300, blank=True)
