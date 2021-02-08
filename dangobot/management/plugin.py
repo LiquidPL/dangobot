@@ -1,10 +1,13 @@
 from discord.ext.commands import Cog, has_permissions
 from discord.ext import commands
 
+from dangobot.core.bot import DangoBot
+
 
 class Management(Cog):
     """Configuration of the bot."""
-    def __init__(self, bot):
+
+    def __init__(self, bot: DangoBot):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
