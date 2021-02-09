@@ -63,3 +63,8 @@ OWNER_ID = os.getenv('OWNER_ID', None)
 # to get notified in DMs about any exceptions that
 # occur.
 SEND_ERRORS = bool(strtobool(os.getenv('SEND_ERRORS', 'True')))
+
+# Used by the !about command, changing them manually will cause the
+# version/date reported there to change
+BUILD_VERSION = os.getenv('BUILD_VERSION', None)
+BUILD_DATE = os.getenv('BUILD_DATE', None)
