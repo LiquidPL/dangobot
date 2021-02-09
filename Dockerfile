@@ -31,6 +31,4 @@ WORKDIR /dangobot
 COPY --from=build --chown=dangobot:dangobot /dangobot /dangobot
 COPY . /dangobot
 
-RUN cp settings.py.docker settings.py
-
 CMD sh -c "pipenv run ./manage.py migrate && pipenv run ./manage.py startbot"

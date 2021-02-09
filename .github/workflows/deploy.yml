@@ -44,10 +44,6 @@ jobs:
         run:
           pipenv install --system --deploy --dev
 
-      - name: Install settings file
-        run:
-          cp settings.py.docker settings.py
-
       - name: Run flake8 linting
         run: flake8
 
