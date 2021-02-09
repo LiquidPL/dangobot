@@ -2,7 +2,7 @@
 ignore=.git,_pycache__,migrations,settings.py,base_settings.py
 
 load-plugins=pylint_django
-django-settings-module=settings
+django-settings-module=dangobot.core.settings
 
 [MESSAGES CONTROL]
 disable=missing-module-docstring,fixme

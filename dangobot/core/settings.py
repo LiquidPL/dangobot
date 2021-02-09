@@ -1,10 +1,12 @@
-from dangobot.base_settings import *
+import os
 
 from distutils.util import strtobool
 
-import os
+from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -13,11 +15,13 @@ SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = True
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
+    'dangobot.core',
     'dangobot.admin',
     'dangobot.management',
     'dangobot.commands',
     'dangobot.dnd',
-] + INSTALLED_APPS
+]
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
