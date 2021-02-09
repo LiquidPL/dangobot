@@ -3,6 +3,7 @@ import logging
 import traceback
 
 from discord import Embed
+from discord.guild import Guild
 from discord.ext import commands
 from django.conf import settings
 
@@ -11,9 +12,8 @@ import aiohttp
 from dangobot import loop
 
 from .guild import GuildCache
-from .helpers import guild_fetch_or_create
 from .help import DangoHelpCommand
-from .database import db_pool
+from .repository import GuildRepository
 
 
 logger = logging.getLogger(__name__)
@@ -65,23 +65,20 @@ class DangoBot(commands.Bot):
     async def on_guild_join(
         self, guild
     ):  # pylint: disable=missing-function-docstring
-        await guild_fetch_or_create(guild)
+        await GuildRepository().create_from_gateway_response(guild)
 
     async def on_guild_update(
-        self, before, after
+        self, before: Guild, after: Guild
     ):  # pylint: disable=missing-function-docstring:
         if before.name == after.name:
             return  # we're only tracking guild names for now
 
-        row = await guild_fetch_or_create(after)
+        guild = await GuildRepository().find_by_id(after.id)
 
-        if row:
-            async with db_pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE core_guild SET name = $1 WHERE id = $2",
-                    after.name,
-                    after.id,
-                )
+        if guild:
+            await GuildRepository().update_from_gateway_response(after)
+        else:
+            await GuildRepository().create_from_gateway_response(after)
 
     async def on_command_error(self, context, exception):
         if isinstance(exception, commands.CommandInvokeError):

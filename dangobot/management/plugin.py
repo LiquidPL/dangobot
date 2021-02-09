@@ -1,3 +1,4 @@
+from discord.ext.commands.context import Context
 from discord.ext.commands import has_permissions
 from discord.ext import commands
 
@@ -8,7 +9,9 @@ class Management(Cog):
     """Configuration of the bot."""
 
     @commands.group(invoke_without_command=True)
-    async def config(self, ctx):  # pylint: disable=missing-function-docstring
+    async def config(
+        self, ctx: Context
+    ):  # pylint: disable=missing-function-docstring
         await ctx.send_help("config")
 
     @config.command()

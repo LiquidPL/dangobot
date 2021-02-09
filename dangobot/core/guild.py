@@ -5,9 +5,7 @@ from django.conf import settings
 
 from discord import Guild
 
-from .helpers import guild_fetch_or_create
-from .models import Guild as DBGuild
-from .database import db_pool
+from .repository import GuildRepository
 
 
 def _ensure_guild(func):
@@ -51,7 +49,7 @@ class GuildCache:
             # the prefix would be retrieved a second time before
             # the first retrieve would put it in the database
             self.guilds[guild.id].prefix = settings.COMMAND_PREFIX
-            await guild_fetch_or_create(guild)
+            await GuildRepository().create_from_gateway_response(guild)
 
         return self.guilds[guild.id].prefix
 
@@ -61,16 +59,9 @@ class GuildCache:
         if prefix == self.guilds[guild.id].prefix:
             return False
 
-        async with db_pool.acquire() as conn:
-            result = await conn.execute(
-                f"UPDATE {DBGuild._meta.db_table} "
-                "SET command_prefix = $1 "
-                "WHERE id = $2",
-                prefix,
-                guild.id,
-            )
+        updated = await GuildRepository().update_command_prefix(guild, prefix)
 
-        if int(result.split()[1]) == 1:
+        if updated:
             self.guilds[guild.id].prefix = prefix
             return True
 

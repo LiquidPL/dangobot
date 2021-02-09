@@ -1,11 +1,6 @@
 import os
 
-from discord import Guild
-from django.conf import settings
-
 from .errors import DownloadError
-
-from .database import db_pool
 
 
 async def download_file(http_session, url, path):
@@ -45,41 +40,3 @@ async def download_file(http_session, url, path):
                     )
 
                 file.write(chunk)
-
-
-async def guild_fetch(guild: Guild):
-    """
-    Attempts to fetch a guild with a given ID from the database.
-    """
-    # TODO: move this to a repository
-    async with db_pool.acquire() as conn:
-        return await conn.fetchrow(
-            "SELECT * FROM core_guild WHERE id = $1", guild.id
-        )
-
-
-async def guild_fetch_or_create(guild: Guild):
-    """
-    Attempts to fetch a guild with a given ID from the database,
-    or, if none exists, creates it.
-
-    Returns True if a guild was successfully fetched, and False otherwise.
-    """
-    # TODO: move this to a repository
-    row = await guild_fetch(guild)
-
-    if row is None:
-        async with db_pool.acquire() as conn:
-            await conn.execute(
-                (
-                    "INSERT INTO core_guild(id, name, command_prefix) "
-                    "VALUES ($1, $2, $3)"
-                ),
-                guild.id,
-                guild.name,
-                settings.COMMAND_PREFIX,
-            )
-
-        row = await guild_fetch(guild)
-
-    return row

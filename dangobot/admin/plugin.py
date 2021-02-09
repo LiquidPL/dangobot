@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord import TextChannel, DMChannel
 
 from dangobot.core.cog import Cog
-from dangobot.core.helpers import guild_fetch_or_create
+from dangobot.core.repository import GuildRepository
 
 
 class Admin(Cog):
@@ -25,12 +25,17 @@ class Admin(Cog):
         """
 
     @debug.command()
-    async def resetguild(self, ctx):
+    async def resetguild(self, ctx: Context):
         """
         Forces the bot to fetch a guild from the gateway and create an entry\
         for it in the database.
+
+        If there already exists an entry for the guild in the database,\
+        it **will** be destroyed. This will usually result in loss of all\
+        the guild related information from the database.
         """
-        await guild_fetch_or_create(ctx.guild)
+        await GuildRepository().destroy_by_id(ctx.guild.id)
+        await GuildRepository().create_from_gateway_response(ctx.guild)
         await ctx.send(content=f"Reset guild {ctx.guild.name}")
 
     @commands.command(hidden=True, rest_as_raw=False)
