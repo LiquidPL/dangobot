@@ -4,17 +4,18 @@ import os
 from asyncpg import exceptions
 from discord import File, Embed
 from discord.ext import commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, Context
 from django.conf import settings
 
 import validators
 
 from dangobot.core.cog import Cog
-from dangobot.core.database import db_pool
 from dangobot.core.errors import DownloadError
 from dangobot.core.helpers import download_file
 
 from .models import Command, file_path
+from .data import ParsedCommand
+from .repository import CommandRepository
 
 
 logger = logging.getLogger(__name__)
@@ -52,14 +53,7 @@ class Commands(Cog):
 
         trigger = ctx.invoked_with
 
-        async with db_pool.acquire() as conn:
-            command = await conn.fetchrow(
-                "SELECT * FROM {table} "
-                "WHERE guild_id = $1 "
-                "AND trigger = $2".format(table=self.table),
-                ctx.guild.id,
-                trigger,
-            )
+        command = await CommandRepository().find_by_trigger(trigger, ctx.guild)
 
         if command:
             params = {"content": command["response"]}
@@ -76,7 +70,7 @@ class Commands(Cog):
 
             await ctx.send(**params)
 
-    async def parse_command(self, ctx, *args):
+    async def parse_command(self, ctx, *args) -> ParsedCommand:
         """
         Parse the command syntax used for the :func:`add` and :func:`edit`
         functions.
@@ -100,13 +94,14 @@ class Commands(Cog):
         message body), then it will take precedence over the attachment posted
         in the command.
 
-        Returns a three-element list where:
+        Returns a four-element tuple where:
         * the first element is a command trigger,
         * the second element is the command response,
         * the third element is a path to an eventual attachment (relative to
           the media directory), if there's no attachment then it is an empty
           string,
-        * the fourth element is the orignal file name of the attachment.
+        * the fourth element is the orignal file name of the attachment, or
+          an empty string if there's no attachment.
         """
         if len(args) < 2 and len(ctx.message.attachments) < 1:
             raise BadArgument("No message content specified!")
@@ -139,7 +134,7 @@ class Commands(Cog):
         trigger = args[0]
         response = " ".join(args[1:])
 
-        return [trigger, response, path_relative, filename]
+        return ParsedCommand(trigger, response, path_relative, filename)
 
     @commands.group(name="commands", invoke_without_command=True)
     async def cmds(self, ctx):
@@ -167,27 +162,20 @@ class Commands(Cog):
         instead of specifying the URL.
         """
         try:
-            params = await self.parse_command(ctx, *args)
+            command = await self.parse_command(ctx, *args)
         except (BadArgument, DownloadError) as exc:
             await ctx.send(content=exc)
             return
 
-        async with db_pool.acquire() as conn:
-            try:
-                await conn.execute(
-                    "INSERT INTO {table}"
-                    "(guild_id, trigger, response, file, original_file_name) "
-                    "VALUES ($1, $2, $3, $4, $5)".format(table=self.table),
-                    ctx.guild.id,
-                    *params,
-                )
-            except exceptions.UniqueViolationError:
-                await ctx.send(
-                    "Command `{}` already exists!".format(ctx.args[-1])
-                )
-                return
+        try:
+            await CommandRepository().add_to_guild(ctx.guild, command)
+        except exceptions.UniqueViolationError:
+            await ctx.send("Command `{}` already exists!".format(ctx.args[-1]))
+            return
 
-        await ctx.send("Command `{}` added successfully!".format(params[0]))
+        await ctx.send(
+            "Command `{}` added successfully!".format(command.trigger)
+        )
 
     @add.error
     async def add_error(
@@ -199,17 +187,11 @@ class Commands(Cog):
             )
 
     @cmds.command()
-    async def list(self, ctx):
+    async def list(self, ctx: Context):
         """
         List all commands defined in the server.
         """
-        async with db_pool.acquire() as conn:
-            command_list = await conn.fetch(
-                f"SELECT trigger FROM {self.table} "
-                "WHERE guild_id = $1 "
-                "ORDER BY trigger ASC",
-                ctx.guild.id,
-            )
+        command_list = await CommandRepository().find_all_from_guild(ctx.guild)
 
         embed = Embed()
         embed.title = "Available custom commands:"
@@ -227,21 +209,14 @@ class Commands(Cog):
         """
         Deletes a command from the server.
         """
-        async with db_pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM {table} "
-                "WHERE guild_id = $1 "
-                "and trigger = $2".format(table=self.table),
-                ctx.guild.id,
-                trigger,
-            )
+        deleted = await CommandRepository().delete_from_guild(
+            trigger, ctx.guild
+        )
 
-        # the return value of a DELETE psql statement is
-        # 'DELETE <number of deleted rows>'
-        if int(result.split(" ")[1]) == 0:
-            message = "Command `{}` does not exist!"
-        else:
+        if deleted:
             message = "Command `{}` deleted successfully!"
+        else:
+            message = "Command `{}` does not exist!"
 
         await ctx.send(content=message.format(trigger))
 
@@ -263,26 +238,19 @@ class Commands(Cog):
         Has the same parameters as the add command.
         """
         try:
-            params = await self.parse_command(ctx, *args)
+            command = await self.parse_command(ctx, *args)
         except (BadArgument, DownloadError) as exc:
             await ctx.send(content=exc)
             return
 
-        async with db_pool.acquire() as conn:
-            result = await conn.execute(
-                f"UPDATE {self.table} "
-                "SET response = $3, file = $4, original_file_name = $5"
-                "WHERE guild_id = $1 AND trigger = $2",
-                ctx.guild.id,
-                *params,
-            )
+        updated = await CommandRepository().update_in_guild(ctx.guild, command)
 
-        if int(result.split(" ")[1] == 0):
-            message = "Command `{}` does not exist!"
-        else:
+        if updated:
             message = "Command `{}` updated successfully!"
+        else:
+            message = "Command `{}` does not exist!"
 
-        await ctx.send(content=message.format(params[0]))
+        await ctx.send(content=message.format(command.trigger))
 
 
 def setup(bot):  # pylint: disable=missing-function-docstring
