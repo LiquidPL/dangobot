@@ -73,7 +73,7 @@ class DnD(Cog):
 
         embed = Embed(title=f"Rolling {roll_string}")
 
-        if not display_format == FULL_VALUE:
+        if not display_format == FULL_VALUE and len(results) > 1:
             for i, result in enumerate(results, start=1):
                 embed.add_field(
                     name=f"Dice {i}"
