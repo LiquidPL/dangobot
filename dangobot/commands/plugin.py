@@ -56,19 +56,19 @@ class Commands(Cog):
         command = await CommandRepository().find_by_trigger(trigger, ctx.guild)
 
         if command:
-            params = {"content": command["response"]}
+            await self.send_response(ctx, command)
 
-            if command["file"] != "":
-                # TODO actual asynchronous file read
-                params["file"] = File(
-                    open(
-                        os.path.join(settings.MEDIA_ROOT, command["file"]),
-                        "rb",
-                    ),
-                    command["original_file_name"],
-                )
+    async def send_response(self, ctx, command) -> None:
+        params = {"content": command["response"]}
 
-            await ctx.send(**params)
+        if command["file"] != "":
+            # TODO actual asynchronous file read
+            params["file"] = File(
+                open(os.path.join(settings.MEDIA_ROOT, command["file"]), "rb"),
+                command["original_file_name"],
+            )
+
+        await ctx.send(**params)
 
     async def parse_command(self, ctx, *args) -> ParsedCommand:
         """
