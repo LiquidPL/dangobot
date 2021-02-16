@@ -59,6 +59,7 @@ class Commands(Cog):
             await self.send_response(ctx, command)
 
     async def send_response(self, ctx, command) -> None:
+        """Sends a respose for a given custom command database record."""
         params = {"content": command["response"]}
 
         if command["file"] != "":
