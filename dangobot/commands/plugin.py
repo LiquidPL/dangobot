@@ -13,7 +13,7 @@ from dangobot.core.cog import Cog
 from dangobot.core.errors import DownloadError
 from dangobot.core.helpers import download_file
 
-from .models import Command, file_path
+from .models import file_path
 from .data import ParsedCommand
 from .repository import CommandRepository
 
@@ -23,11 +23,6 @@ logger = logging.getLogger(__name__)
 
 class Commands(Cog):
     """A plugin for configuring custom user-made bot commands."""
-
-    def __init__(self, bot):
-        super().__init__(bot)
-
-        self.table = Command._meta.db_table
 
     @Cog.listener()
     async def on_message(
