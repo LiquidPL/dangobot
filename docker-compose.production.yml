@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  bot:
+    image: ghcr.io/liquidpl/dangobot:latest
+    container_name: dangobot-bot
+    volumes:
+      - media:/dangobot/media
+      - ./dangobot.log:/dangobot/dangobot.log
+    env_file:
+      - .env
+    restart: always
+  postgres:
+    image: postgres:latest
+    container_name: dangobot-postgres
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./docker/init-user.sh:/docker-entrypoint-initdb.d/init-user.sh
+    env_file:
+      - .env
+    restart: always
+
+volumes:
+  media:
+  database:
