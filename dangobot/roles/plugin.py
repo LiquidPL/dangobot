@@ -41,15 +41,15 @@ class Roles(Cog):
         if after.channel and (role := await get_role(after.channel)):
             await member.add_roles(role)
 
-    @commands.group(name="roleconfig", invoke_without_command=True)
+    @commands.group(invoke_without_command=True)
     async def roles(self, ctx: Context):
         """Management of automatically assigned roles."""
-        await ctx.send_help("roleconfig")
+        await ctx.send_help("roles")
 
     @roles.group(invoke_without_command=True)
     async def voice(self, ctx: Context):
         """Management of linked roles and voice channels."""
-        await ctx.send_help("roleconfig voice")
+        await ctx.send_help("roles voice")
 
     @voice.command(name="link")
     async def voice_link(
