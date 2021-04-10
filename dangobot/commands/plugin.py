@@ -173,15 +173,6 @@ class Commands(Cog):
             "Command `{}` added successfully!".format(command.trigger)
         )
 
-    @add.error
-    async def add_error(
-        self, ctx, error
-    ):  # pylint: disable=missing-function-docstring
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                "You need to specify the {}!".format(error.param.name)
-            )
-
     @cmds.command()
     async def list(self, ctx: Context):
         """
@@ -215,15 +206,6 @@ class Commands(Cog):
             message = "Command `{}` does not exist!"
 
         await ctx.send(content=message.format(trigger))
-
-    @delete.error
-    async def delete_error(
-        self, ctx, error
-    ):  # pylint: disable=missing-function-docstring
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                "You need to specify the {}!".format(error.param.name)
-            )
 
     @cmds.command(usage="<trigger> (<response>) (attachment=url)")
     @commands.has_permissions(administrator=True)

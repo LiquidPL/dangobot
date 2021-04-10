@@ -3,6 +3,7 @@ import logging
 import traceback
 
 from discord import Embed
+from discord.ext.commands.context import Context
 from discord.guild import Guild
 from discord.ext import commands
 from django.conf import settings
@@ -80,7 +81,7 @@ class DangoBot(commands.Bot):
         else:
             await GuildRepository().create_from_gateway_response(after)
 
-    async def on_command_error(self, context, exception):
+    async def on_command_error(self, context: Context, exception):
         if isinstance(exception, commands.CommandInvokeError):
             await context.send(
                 content="Sorry, an error has occured! "
@@ -108,6 +109,11 @@ class DangoBot(commands.Bot):
             await context.send(
                 content="You don't have the permissions to do this!"
             )
+        elif isinstance(exception, commands.MissingRequiredArgument):
+            await context.send(
+                "You need to specify `{}`!".format(exception.param.name)
+            )
+            await context.send_help(context.command.qualified_name)
 
     async def format_traceback(self, exception):
         """
