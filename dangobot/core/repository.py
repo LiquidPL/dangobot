@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
+from asyncpg import Record
 
 from discord import Guild
 
@@ -10,6 +11,12 @@ from django.conf import settings
 
 from .models import Guild as DBGuild
 from .database import db_pool as _db_pool
+
+
+def _get_query_string(args: Dict[str, any]) -> str:
+    return " AND ".join(
+        [f"{field[0]} = ${i + 1}" for i, field in enumerate(args.items())]
+    )
 
 
 class RepositoryABCSingleton(
@@ -62,7 +69,6 @@ class Repository(metaclass=RepositoryABCSingleton):
         Returns `true` if the delete was successful, or `false` when it wasn't
         (for instance, when there was no record with a given ID).
         """
-
         async with self.db_pool.acquire() as conn:
             conn: Connection
 
@@ -71,6 +77,110 @@ class Repository(metaclass=RepositoryABCSingleton):
             )
 
             return int(result.split()[1]) == 1
+
+    async def find_by(self, args: Dict[str, Any]) -> List[Record]:
+        """
+        Finds records in the table constrained by an arbitrary set of fields.
+
+        The values are sanitized before being sent to the database.
+
+        Parameters
+        -----------
+        args: Dict[`str`, `any`]
+            A dictionary containing the query constraints.
+
+        Returns
+        --------
+        List[`Record`]
+            A list of the fetched records.
+        """
+        query_string = _get_query_string(args)
+
+        async with self.db_pool.acquire() as conn:
+            conn: Connection
+
+            return await conn.fetch(
+                f"SELECT * FROM {self.table_name} WHERE {query_string}",
+                *args.values(),
+            )
+
+    async def find_one_by(self, args: Dict[str, Any]) -> Optional[Record]:
+        """
+        Analogic to :meth:`find_by`, but fetches only one row from the
+        database.
+
+        Parameters
+        -----------
+        args: Dict[`str`, `any`]
+            A dictionary containing the query constraints.
+
+        Returns
+        --------
+        Optional[`Record`]
+            The record fetched from the database, or `None` if there was none.
+        """
+        query_string = _get_query_string(args)
+
+        async with self.db_pool.acquire() as conn:
+            conn: Connection
+
+            return await conn.fetchrow(
+                f"SELECT * FROM {self.table_name} WHERE {query_string}",
+                *args.values(),
+            )
+
+    async def destroy_by(self, args: Dict[str, Any]) -> int:
+        """
+        Removes records from the database constrained by an arbitrary set of
+        fields.
+
+        The values are sanitized before being sent to the database.
+
+        Parameters
+        -----------
+        args: Dict[`str`, `any`]
+            A dictionary containing the query constraints.
+
+        Returns
+        --------
+        `int`
+            The amount of records deleted by the query.
+        """
+        query_string = _get_query_string(args)
+
+        async with self.db_pool.acquire() as conn:
+            conn: Connection
+
+            result = await conn.execute(
+                f"DELETE FROM {self.table_name} WHERE {query_string}",
+                *args.values(),
+            )
+
+            return int(result.split()[1])
+
+    async def insert(self, args: Dict[str, Any]):
+        """
+        Inserts an arbitrary set of fields and values into the database.
+
+        The values are sanitized before being inserted.
+
+        Parameters
+        -----------
+        args: Dict[`str`, `any`]
+            A dictionary containing the table fields and their respective
+            values.
+        """
+        keys = ", ".join(args.keys())
+        values = ", ".join([f"${i + 1}" for i in range(len(args))])
+
+        async with self.db_pool.acquire() as conn:
+            conn: Connection
+
+            await conn.execute(
+                f"INSERT INTO {self.table_name} "
+                f"({keys}) VALUES ({values})",
+                *args.values(),
+            )
 
 
 class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
@@ -95,16 +205,13 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
         if existing_guild:
             return existing_guild
 
-        async with self.db_pool.acquire() as conn:
-            await conn.execute(
-                (
-                    f"INSERT INTO {self.table_name}(id, name, command_prefix) "
-                    "VALUES ($1, $2, $3)"
-                ),
-                guild.id,
-                guild.name,
-                settings.COMMAND_PREFIX,
-            )
+        await self.insert(
+            {
+                "id": guild.id,
+                "name": guild.name,
+                "command_prefix": settings.COMMAND_PREFIX,
+            }
+        )
 
         return await self.find_by_id(guild.id)
 

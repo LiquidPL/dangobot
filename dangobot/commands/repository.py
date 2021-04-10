@@ -43,16 +43,19 @@ class CommandRepository(Repository):  # pylint: disable=missing-class-docstring
 
     async def add_to_guild(self, guild: Guild, command: ParsedCommand) -> None:
         """Inserts a command for a given guild into the database."""
-        async with self.db_pool.acquire() as conn:
-            conn: Connection
 
-            await conn.execute(
-                f"INSERT INTO {self.table_name}"
-                "(guild_id, trigger, response, file, original_file_name) "
-                "VALUES ($1, $2, $3, $4, $5)",
-                guild.id,
-                *command,
-            )
+        await self.insert(
+            {
+                "guild_id": guild.id,
+                "trigger": command.trigger,
+                "response": command.response,
+                # this column is named file because of Django model
+                # limitations, it actually contains the path to the file
+                # on the server
+                "file": command.path_relative,
+                "original_file_name": command.filename,
+            }
+        )
 
     async def update_in_guild(
         self, guild: Guild, command: ParsedCommand
