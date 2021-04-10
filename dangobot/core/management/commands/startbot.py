@@ -12,6 +12,8 @@ class Command(BaseCommand):
     help = "Starts the bot"
 
     def __init__(self):
+        super().__init__()
+
         with open(
             os.path.join(settings.BASE_DIR, "dangobot", "logging.yml"), "r"
         ) as config_file:
