@@ -61,6 +61,11 @@ class Roles(Cog):
         Whenever an user joins that voice channel, they will be automatically\
         assigned the linked role. This can be used for things like a text\
         channel used to chat with voice members when they're unable to speak.
+
+        Please note that since it's not possible to mention a voice channel,\
+        you'll need to copy the ID of it in order to use it in this command.\
+        You can do so by enabling Developer Mode (Settings > Advanced ->\
+        Developer Mode), right clicking the channel, and selecting **Copy ID**.
         """
         try:
             await RoleForVCRepository().insert(
