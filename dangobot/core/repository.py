@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Type, Dict, List, Optional
 
 from asyncpg.pool import Pool
 from asyncpg.connection import Connection
@@ -8,12 +10,13 @@ from asyncpg import Record
 from discord import Guild
 
 from django.conf import settings
+from django.db.models.base import Model
 
 from .models import Guild as DBGuild
 from .database import db_pool as _db_pool
 
 
-def _get_query_string(args: Dict[str, any]) -> str:
+def _get_query_string(args: Dict[str, Any]) -> str:
     return " AND ".join(
         [f"{field[0]} = ${i + 1}" for i, field in enumerate(args.items())]
     )
@@ -22,7 +25,7 @@ def _get_query_string(args: Dict[str, any]) -> str:
 class RepositoryABCSingleton(
     ABCMeta
 ):  # pylint: disable=missing-class-docstring
-    _instances = {}
+    _instances: Dict[RepositoryABCSingleton, Repository] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -35,6 +38,8 @@ class RepositoryABCSingleton(
 class Repository(metaclass=RepositoryABCSingleton):
     """An ABC that's the base for all other repositories."""
 
+    db_pool: Pool
+
     def __init__(self, db_pool: Pool = None) -> None:
         super().__init__()
 
@@ -45,18 +50,23 @@ class Repository(metaclass=RepositoryABCSingleton):
 
     @property
     @abstractmethod
-    def table_name(self) -> str:
-        """Returns the table name for this repository."""
+    def model(self) -> Type[Model]:
+        """Returns the Django model corresponding to this repository."""
 
     @property
-    @abstractmethod
+    def table_name(self) -> str:
+        """Returns the table name for this repository."""
+        return self.model._meta.db_table
+
+    @property
     def primary_key(self) -> str:
         """Returns the primary key for this repository's table."""
+        return self.model._meta.pk.name  # type: ignore
 
     async def find_by_id(self, _id: int) -> Any:
         """Finds the object by its ID."""
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
             return await conn.fetchrow(
                 f"SELECT * FROM {self.table_name} WHERE {self.primary_key}=$1",
                 _id,
@@ -69,9 +79,8 @@ class Repository(metaclass=RepositoryABCSingleton):
         Returns `true` if the delete was successful, or `false` when it wasn't
         (for instance, when there was no record with a given ID).
         """
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             result = await conn.execute(
                 f"DELETE FROM {self.table_name} WHERE id=$1", _id
             )
@@ -96,9 +105,8 @@ class Repository(metaclass=RepositoryABCSingleton):
         """
         query_string = _get_query_string(args)
 
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             return await conn.fetch(
                 f"SELECT * FROM {self.table_name} WHERE {query_string}",
                 *args.values(),
@@ -121,9 +129,8 @@ class Repository(metaclass=RepositoryABCSingleton):
         """
         query_string = _get_query_string(args)
 
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             return await conn.fetchrow(
                 f"SELECT * FROM {self.table_name} WHERE {query_string}",
                 *args.values(),
@@ -148,9 +155,8 @@ class Repository(metaclass=RepositoryABCSingleton):
         """
         query_string = _get_query_string(args)
 
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             result = await conn.execute(
                 f"DELETE FROM {self.table_name} WHERE {query_string}",
                 *args.values(),
@@ -173,9 +179,8 @@ class Repository(metaclass=RepositoryABCSingleton):
         keys = ", ".join(args.keys())
         values = ", ".join([f"${i + 1}" for i in range(len(args))])
 
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             await conn.execute(
                 f"INSERT INTO {self.table_name} "
                 f"({keys}) VALUES ({values})",
@@ -185,12 +190,8 @@ class Repository(metaclass=RepositoryABCSingleton):
 
 class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
     @property
-    def table_name(self) -> str:
-        return DBGuild._meta.db_table
-
-    @property
-    def primary_key(self) -> str:
-        return DBGuild._meta.pk.name
+    def model(self) -> Type[Model]:
+        return DBGuild
 
     async def create_from_gateway_response(self, guild: Guild) -> Any:
         """
@@ -231,7 +232,7 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
 
             return int(result.split()[1]) == 1
 
-    async def update_command_prefix(self, guild: Guild, prefix: str) -> None:
+    async def update_command_prefix(self, guild: Guild, prefix: str) -> bool:
         """Updates the command prefix for a given guild."""
 
         async with self.db_pool.acquire() as conn:

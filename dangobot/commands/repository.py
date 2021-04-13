@@ -1,6 +1,8 @@
 from typing import Any, List
 
 from asyncpg.connection import Connection
+from asyncpg.types import Type
+from django.db.models.base import Model
 from dangobot.core.repository import Repository
 
 from dangobot.core.models import Guild
@@ -11,18 +13,13 @@ from .data import ParsedCommand
 
 class CommandRepository(Repository):  # pylint: disable=missing-class-docstring
     @property
-    def table_name(self) -> str:
-        return DBCommand._meta.db_table
-
-    @property
-    def primary_key(self) -> str:
-        return DBCommand._meta.pk.name
+    def model(self) -> Type[Model]:
+        return DBCommand
 
     async def find_by_trigger(self, trigger: str, guild: Guild) -> Any:
         """Finds a command from a given guild by its text trigger."""
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             return await conn.fetchrow(
                 f"SELECT * FROM {self.table_name} "
                 "WHERE guild_id = $1 AND trigger = $2",
@@ -32,9 +29,8 @@ class CommandRepository(Repository):  # pylint: disable=missing-class-docstring
 
     async def find_all_from_guild(self, guild: Guild) -> List[Any]:
         """Returns a list of all custom commands defined for a given guild."""
+        conn: Connection
         async with self.db_pool.acquire() as conn:
-            conn: Connection
-
             return await conn.fetch(
                 f"SELECT trigger FROM {self.table_name} "
                 "WHERE guild_id = $1 ORDER BY trigger ASC",

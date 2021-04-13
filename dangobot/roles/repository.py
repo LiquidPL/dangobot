@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Type
 from asyncpg import Record
+from django.db.models.base import Model
 from dangobot.roles.models import RoleForVoiceChannel
 from dangobot.core.repository import Repository
 
@@ -8,12 +9,8 @@ class RoleForVCRepository(
     Repository
 ):  # pylint: disable=missing-class-docstring
     @property
-    def table_name(self) -> str:
-        return RoleForVoiceChannel._meta.db_table
-
-    @property
-    def primary_key(self) -> str:
-        return RoleForVoiceChannel._meta.pk.name
+    def model(self) -> Type[Model]:
+        return RoleForVoiceChannel
 
     async def find_by_voice_channel(self, voice_channel_id: int) -> Record:
         """Returns the role for a given voice channel."""

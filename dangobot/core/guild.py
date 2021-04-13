@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import wraps
+from typing import Optional
 
 from django.conf import settings
 
@@ -69,4 +70,4 @@ class GuildCache:
 @dataclass
 class _Guild:
     id: int  # pylint: disable=invalid-name
-    prefix: str = None
+    prefix: Optional[str] = None

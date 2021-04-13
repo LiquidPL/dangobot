@@ -50,6 +50,9 @@ jobs:
       - name: Run pylint linting
         run: pylint dangobot
 
+      - name: Run static type checks
+        run: mypy dangobot
+
   build-container:
     name: Build Docker container
     runs-on: ubuntu-latest
