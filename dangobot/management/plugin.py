@@ -2,7 +2,7 @@ from discord.ext.commands.context import Context
 from discord.ext.commands import has_permissions
 from discord.ext import commands
 
-from dangobot.core.cog import Cog
+from dangobot.core.plugin import Cog
 from dangobot.core.repository import GuildRepository
 
 
@@ -19,7 +19,7 @@ class Management(Cog):
     @has_permissions(administrator=True)
     async def setprefix(self, ctx, prefix: str):
         """Sets a new command prefix for the bot commands."""
-        if await GuildRepository().set_command_prefix(ctx.guild, prefix):
+        if GuildRepository().set_command_prefix(ctx.guild, prefix):
             message = f"Command prefix changed to `{prefix}`."
         else:
             message = f"`{prefix}` is already your prefix."

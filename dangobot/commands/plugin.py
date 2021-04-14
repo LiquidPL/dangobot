@@ -9,7 +9,7 @@ from django.conf import settings
 
 import validators
 
-from dangobot.core.cog import Cog
+from dangobot.core.plugin import Cog
 from dangobot.core.errors import DownloadError
 from dangobot.core.helpers import download_file
 

@@ -4,8 +4,8 @@ from discord import Member, VoiceState, Role, VoiceChannel, Embed
 from discord.ext import commands
 from discord.ext.commands.context import Context
 
+from dangobot.core.plugin import Cog
 from dangobot.core.bot import DangoBot
-from dangobot.core.cog import Cog
 from dangobot.roles.repository import RoleForVCRepository
 
 

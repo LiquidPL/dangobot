@@ -1,6 +1,6 @@
 from discord import Embed
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Cog as BaseCog
 
 from dateutil.parser import isoparse
 
@@ -8,7 +8,12 @@ from django.conf import settings
 
 from dangobot.core.bot import DangoBot
 
-from .cog import Cog
+
+class Cog(BaseCog):
+    """The base class for the bot's cogs/plugins."""
+
+    def __init__(self, bot: DangoBot):
+        self.bot = bot
 
 
 class Core(Cog):

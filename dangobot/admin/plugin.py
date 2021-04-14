@@ -8,7 +8,7 @@ from discord.ext.commands import (
 from discord.ext import commands
 from discord import TextChannel, DMChannel
 
-from dangobot.core.cog import Cog
+from dangobot.core.plugin import Cog
 from dangobot.core.repository import GuildRepository
 
 

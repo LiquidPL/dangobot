@@ -5,7 +5,7 @@ from typing import List, Match, Tuple
 from discord import Embed
 from discord.ext import commands
 
-from dangobot.core.cog import Cog
+from dangobot.core.plugin import Cog
 from dangobot.core.errors import DangoException
 
 
