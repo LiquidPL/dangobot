@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Type, Dict, List, Optional
 
 from asyncpg.pool import Pool
@@ -40,7 +41,7 @@ class Repository(metaclass=RepositoryABCSingleton):
 
     db_pool: Pool
 
-    def __init__(self, db_pool: Pool = None) -> None:
+    def __init__(self, db_pool: Optional[Pool] = None) -> None:
         super().__init__()
 
         if db_pool is None:
@@ -63,7 +64,7 @@ class Repository(metaclass=RepositoryABCSingleton):
         """Returns the primary key for this repository's table."""
         return self.model._meta.pk.name  # type: ignore
 
-    async def find_by_id(self, _id: int) -> Any:
+    async def find_by_id(self, _id: int) -> Record:
         """Finds the object by its ID."""
         conn: Connection
         async with self.db_pool.acquire() as conn:
@@ -188,7 +189,36 @@ class Repository(metaclass=RepositoryABCSingleton):
             )
 
 
+@dataclass
+class CachedGuild:
+    """A class for storing commonly used guild data."""
+
+    prefix: Optional[str] = None
+
+
+class GuildCache(Dict[int, CachedGuild]):
+    """A dictionary caching data of guilds known to the bot."""
+
+    def __getitem__(self, k: int) -> CachedGuild:
+        """
+        Ensures a :class:`CachedGuild` is available when trying to access one.
+        """
+        try:
+            guild: CachedGuild = super().__getitem__(k)
+        except KeyError:
+            self[k] = guild = CachedGuild()
+
+        return guild
+
+
 class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
+    _cache: GuildCache
+
+    def __init__(self, db_pool: Optional[Pool] = None) -> None:
+        super().__init__(db_pool=db_pool)
+
+        self._cache = GuildCache()
+
     @property
     def model(self) -> Type[Model]:
         return DBGuild
@@ -214,6 +244,8 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
             }
         )
 
+        self._cache[guild.id].prefix = settings.COMMAND_PREFIX
+
         return await self.find_by_id(guild.id)
 
     async def update_from_gateway_response(self, guild: Guild) -> bool:
@@ -232,7 +264,28 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
 
             return int(result.split()[1]) == 1
 
-    async def update_command_prefix(self, guild: Guild, prefix: str) -> bool:
+    async def get_command_prefix(self, guild: Guild) -> str:
+        """
+        Gets a command prefix for a given guild.
+
+        Parameters
+        -----------
+        guild: :class:`~dangobot.core.models.Guild`
+            The guild.
+
+        Returns
+        --------
+        `str`
+            The command prefix.
+        """
+        if (prefix := self._cache[guild.id].prefix) is None:
+            db_guild = await self.find_by_id(guild.id)
+
+            self._cache[guild.id].prefix = prefix = db_guild['command_prefix']
+
+        return prefix
+
+    async def set_command_prefix(self, guild: Guild, prefix: str) -> bool:
         """Updates the command prefix for a given guild."""
 
         async with self.db_pool.acquire() as conn:
@@ -244,7 +297,10 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
                 guild.id,
             )
 
-            return int(result.split()[1]) == 1
+            if result := (int(result.split()[1]) == 1) is True:
+                self._cache[guild.id].prefix = prefix
+
+            return result
 
 
 __all__ = ["Repository", "GuildRepository"]

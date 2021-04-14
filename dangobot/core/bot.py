@@ -12,7 +12,6 @@ import aiohttp
 
 from dangobot import loop
 
-from .guild import GuildCache
 from .help import DangoHelpCommand
 from .repository import GuildRepository
 
@@ -32,7 +31,6 @@ class DangoBot(commands.Bot):
         )
 
         self.http_session = None
-        self.cache = None
 
         for app in settings.INSTALLED_APPS:
             try:
@@ -55,11 +53,10 @@ class DangoBot(commands.Bot):
         if message.guild is None:
             return settings.COMMAND_PREFIX
 
-        return await self.cache.get_prefix(guild=message.guild)
+        return await GuildRepository().get_command_prefix(guild=message.guild)
 
     async def on_ready(self):  # pylint: disable=missing-function-docstring
         self.http_session = aiohttp.ClientSession()
-        self.cache = GuildCache()
 
         logger.info("Logged in as %s", self.user)
 
