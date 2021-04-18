@@ -19,7 +19,7 @@ class Management(Cog):
     @has_permissions(administrator=True)
     async def setprefix(self, ctx, prefix: str):
         """Sets a new command prefix for the bot commands."""
-        if GuildRepository().set_command_prefix(ctx.guild, prefix):
+        if await GuildRepository().set_command_prefix(ctx.guild, prefix):
             message = f"Command prefix changed to `{prefix}`."
         else:
             message = f"`{prefix}` is already your prefix."
