@@ -1,6 +1,5 @@
 from discord.ext.commands import (
     Context,
-    is_owner,
     NoPrivateMessage,
     BadArgument,
     MissingPermissions,
@@ -8,41 +7,13 @@ from discord.ext.commands import (
 from discord.ext import commands
 from discord import TextChannel, DMChannel
 
-from dangobot.core.embeds import InfoEmbedFormatter
 from dangobot.core.plugin import Cog
-from dangobot.core.repository import GuildRepository
 
 
 class Admin(Cog):
     """
     Contains commands useful to server (and bot) administrators.
     """
-
-    @commands.group(hidden=True)
-    @is_owner()
-    async def debug(self, ctx):
-        """
-        Various commands uses for debugging, available only for the bot owner.
-        """
-
-    @debug.command()
-    async def resetguild(self, ctx: Context):
-        """
-        Forces the bot to fetch a guild from the gateway and create an entry\
-        for it in the database.
-
-        If there already exists an entry for the guild in the database,\
-        it **will** be destroyed. This will usually result in loss of all\
-        the guild related information from the database.
-        """
-        await GuildRepository().destroy_by_id(ctx.guild.id)
-        await GuildRepository().create_from_gateway_response(ctx.guild)
-        await ctx.send(
-            embed=InfoEmbedFormatter().format(
-                title=f"Guild **{ctx.guild.name}** "
-                "has been reset successfully."
-            )
-        )
 
     @commands.command(hidden=True, rest_as_raw=False)
     async def say(self, ctx: Context, channel: TextChannel, *, message):
