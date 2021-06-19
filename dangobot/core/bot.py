@@ -2,7 +2,6 @@ import importlib
 import logging
 import traceback
 
-from discord import Embed
 from discord.ext.commands.context import Context
 from discord.guild import Guild
 from discord.ext import commands
@@ -11,6 +10,7 @@ from django.conf import settings
 import aiohttp
 
 from dangobot import loop
+from dangobot.core.embeds import ErrorEmbed
 
 from .help import DangoHelpCommand
 from .repository import GuildRepository
@@ -81,8 +81,10 @@ class DangoBot(commands.Bot):
     async def on_command_error(self, context: Context, exception):
         if isinstance(exception, commands.CommandInvokeError):
             await context.send(
-                content="Sorry, an error has occured! "
-                "The bot owner has been informed of this."
+                embed=ErrorEmbed(
+                    title="Sorry, an error has occurred!",
+                    description="The bot owner has been informed about this.",
+                )
             )
 
             exc = exception.original
@@ -145,7 +147,7 @@ class DangoBot(commands.Bot):
             trace_url = await resp.text()
 
         return (
-            Embed(title="❌ An error has occured!", color=0xff0000)
+            ErrorEmbed(title="An error has occured!")
             .add_field(
                 name=exception.__class__.__module__
                 + "."

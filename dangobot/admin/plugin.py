@@ -8,6 +8,7 @@ from discord.ext.commands import (
 from discord.ext import commands
 from discord import TextChannel, DMChannel
 
+from dangobot.core.embeds import InfoEmbed
 from dangobot.core.plugin import Cog
 from dangobot.core.repository import GuildRepository
 
@@ -36,7 +37,12 @@ class Admin(Cog):
         """
         await GuildRepository().destroy_by_id(ctx.guild.id)
         await GuildRepository().create_from_gateway_response(ctx.guild)
-        await ctx.send(content=f"Reset guild {ctx.guild.name}")
+        await ctx.send(
+            embed=InfoEmbed(
+                title=f"Guild **{ctx.guild.name}** "
+                "has been reset successfully."
+            )
+        )
 
     @commands.command(hidden=True, rest_as_raw=False)
     async def say(self, ctx: Context, channel: TextChannel, *, message):
