@@ -1,56 +1,110 @@
-from typing import Optional
-from discord import Embed as DiscordEmbed
+from datetime import datetime
+from typing import Any, Dict, Optional, Union
+
 from discord.colour import Colour
+from discord.embeds import Embed as DiscordEmbed
 
 
-class BaseEmbed(DiscordEmbed):
+class EmbedFormatter:
     """
-    Base class for the bot's custom embeds.
+    A class that facilitates definition of custom embeds with preset default
+    arguments, which can be further overriden by the :meth:`format` method.
 
-    Provides a way to specify an emoji icon that is displayed alongisde the
-    embed's title.
+    You can declare default values for all arguments supported by the
+    :class:`discord.embeds.Embed` constructor, by setting them as class
+    attributes.
 
-    Class Attributes
+    Attributes
     ----------------
     icon: Optional[str]
-        Icon that is being displayed alongside the embed's title.
+        An icon (usually an emoji) that is displayed alongside the embed's
+        title.
     """
 
-    icon: Optional[str] = None
+    title: Optional[str]
+    description: Optional[str]
+    type: Optional[str]
+    url: Optional[str]
+    timestamp: Optional[datetime]
+    colour: Union[Colour, int]
+    icon: Optional[str]
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    __slots__ = (
+        "title",
+        "description",
+        "type",
+        "url",
+        "timestamp",
+        "colour",
+        "icon",
+    )
 
-        self.configure()
+    _vanilla_embed_keys = (
+        "title",
+        "description",
+        "type",
+        "url",
+        "timestamp",
+        "colour",
+        "color",
+    )
 
-    def configure(self):
-        """Use this method to set default properties for this embed."""
+    def _prepare_arguments(self, **kwargs) -> Dict[str, Any]:
+        """
+        Prepares the list of arguments to be passed into the embed constructor,
+        by taking the default arguments set in class attributes, and merging
+        them with the incoming ones.
 
-    def to_dict(self):
-        embed = super().to_dict()
+        This method can be overriden by subclasses to customize this process,
+        or add any additional arguments.
+        """
+        # filter default args to contain only values a vanilla embed accepts
+        defaults = {
+            key: getattr(self, key)
+            for key in self.__slots__
+            if key in self._vanilla_embed_keys and hasattr(self, key)
+        }
 
-        if self.icon is not None and "title" in embed:
-            embed["title"] = f"{self.icon} {embed['title']}"
+        arguments = defaults | kwargs
 
-        return embed
+        if self.icon is not None and "title" in arguments:
+            arguments["title"] = f"{self.icon} {arguments['title']}"
+
+        return arguments
+
+    def format(self, **kwargs) -> DiscordEmbed:
+        """
+        Returns a formatted embed.
+
+        Returns
+        -------
+        :class:`discord.embeds.Embed`
+            The formatted embed.
+        """
+        arguments = self._prepare_arguments(**kwargs)
+
+        return DiscordEmbed(**arguments)
 
 
-class InfoEmbed(BaseEmbed):
+class InfoEmbedFormatter(EmbedFormatter):
     """
     Generic informational embed, for instance shown on successful completion
     of some operation.
     """
 
     icon = "ℹ️"
-
-    def configure(self):
-        self.colour = Colour.blue()
+    colour = Colour.blue()
 
 
-class ErrorEmbed(BaseEmbed):
-    """An embed used for error messages."""
+class ErrorEmbedFormatter(EmbedFormatter):
+    """
+    An embed used for error messages.
+
+    Arguments
+    ---------
+    ctx: Optional[discord.ext.commands.context.Context]
+        The command execution context that caused this error.
+    """
 
     icon = "🛑"
-
-    def configure(self):
-        self.colour = Colour.red()
+    colour = Colour.red()
