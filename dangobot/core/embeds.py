@@ -49,7 +49,7 @@ class EmbedFormatter:
         "color",
     )
 
-    def _prepare_arguments(self, **kwargs) -> Dict[str, Any]:
+    def prepare_arguments(self, **kwargs) -> Dict[str, Any]:
         """
         Prepares the list of arguments to be passed into the embed constructor,
         by taking the default arguments set in class attributes, and merging
@@ -81,7 +81,7 @@ class EmbedFormatter:
         :class:`discord.embeds.Embed`
             The formatted embed.
         """
-        arguments = self._prepare_arguments(**kwargs)
+        arguments = self.prepare_arguments(**kwargs)
 
         return DiscordEmbed(**arguments)
 
