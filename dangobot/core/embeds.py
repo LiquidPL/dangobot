@@ -99,12 +99,8 @@ class InfoEmbedFormatter(EmbedFormatter):
 class ErrorEmbedFormatter(EmbedFormatter):
     """
     An embed used for error messages.
-
-    Arguments
-    ---------
-    ctx: Optional[discord.ext.commands.context.Context]
-        The command execution context that caused this error.
     """
 
     icon = "🛑"
     colour = Colour.red()
+    title = "An error has occurred!"

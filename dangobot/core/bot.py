@@ -113,6 +113,10 @@ class DangoBot(commands.Bot):
                 "You need to specify `{}`!".format(exception.param.name)
             )
             await context.send_help(context.command.qualified_name)
+        elif isinstance(exception, commands.CommandError):
+            await context.send(
+                embed=ErrorEmbedFormatter().format(description=exception)
+            )
 
     async def format_traceback(self, exception):
         """

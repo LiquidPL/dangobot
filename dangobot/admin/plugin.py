@@ -38,13 +38,6 @@ class Admin(Cog):
 
         await channel.send(content=message)
 
-    @say.error
-    async def say_errors(
-        self, ctx, error
-    ):  # pylint: disable=missing-function-docstring
-        if isinstance(error, (BadArgument, NoPrivateMessage)):
-            await ctx.send(content=error)
-
 
 def setup(bot):  # pylint: disable=missing-function-docstring
     bot.add_cog(Admin(bot))
