@@ -19,10 +19,9 @@ LABEL org.opencontainers.image.source=https://github.com/LiquidPL/dangobot
 
 RUN pip install --no-cache-dir pipenv
 RUN apk add --update musl libc6-compat ca-certificates libffi libpq shadow \
-    && rm -rf /var/cache/apk/*
-
-RUN useradd -m dangobot \
+    && useradd -m dangobot \
     && apk del shadow \
+    && rm -rf /var/cache/apk/* \
     && mkdir -p /dangobot/media \
     && chown -R dangobot:dangobot /dangobot
 
