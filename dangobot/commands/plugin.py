@@ -51,16 +51,17 @@ class Commands(Cog):
         return False
 
     async def send_response(self, ctx, command) -> None:
-        """Sends a respose for a given custom command database record."""
+        """Sends a response for a given custom command database record."""
         params = {"content": command["response"]}
 
-        if command["file"] != "":
-            # TODO actual asynchronous file read
+        if command["file"] == "":
+            await ctx.send(**params)
+        else:
+            # TODO: actual asynchronous file read
             with open(
                 os.path.join(settings.MEDIA_ROOT, command["file"]), "rb"
             ) as file:
                 params["file"] = File(file, command["original_file_name"])
-
                 await ctx.send(**params)
 
     async def parse_command(self, ctx, *args) -> ParsedCommand:
