@@ -1,18 +1,16 @@
 from discord import Embed
 from discord.ext import commands
-from discord.ext.commands import Context, Cog as BaseCog
+from discord.ext.commands import Bot, Context, Cog as BaseCog
 
 from dateutil.parser import isoparse
 
 from django.conf import settings
 
-from dangobot.core.bot import DangoBot
-
 
 class Cog(BaseCog):
     """The base class for the bot's cogs/plugins."""
 
-    def __init__(self, bot: DangoBot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
 
@@ -55,5 +53,5 @@ class Core(Cog):
         await ctx.send(embed=embed)
 
 
-def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
+def setup(bot: Bot):  # pylint: disable=missing-function-docstring
     bot.add_cog(Core(bot))
