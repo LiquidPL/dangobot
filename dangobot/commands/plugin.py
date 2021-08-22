@@ -9,6 +9,7 @@ from django.conf import settings
 
 import validators
 
+from dangobot.core.bot import command_handler
 from dangobot.core.plugin import Cog
 from dangobot.core.errors import DownloadError
 from dangobot.core.helpers import download_file
@@ -24,34 +25,30 @@ logger = logging.getLogger(__name__)
 class Commands(Cog):
     """A plugin for configuring custom user-made bot commands."""
 
-    @Cog.listener()
-    async def on_message(
-        self, message
-    ):  # pylint: disable=missing-function-docstring
-        await self.process_messages(message)
-
-    async def process_messages(self, message):
+    @command_handler
+    async def handle_command(self, ctx: Context) -> bool:
         """
-        The main custom message handler.
+        The command handler.
 
-        Handles all incoming messages, finds any command invocations,
-        and checks if there's a custom command defined with the given name.
-        If it exists, its contents are pulled from the database, and sent to
-        the target channel.
+        Handles all incoming command invocations, and checks if there's
+        a custom command defined with the given name. If it exists, its
+        contents are pulled from the database, and sent to the target channel.
 
         Arguments:
             message (string): the incoming message
         """
-        ctx = await self.bot.get_context(message)
         if not ctx.guild:  # we don't want commands to work in DMs
-            return
+            return False
 
-        trigger = ctx.invoked_with
-
-        command = await CommandRepository().find_by_trigger(trigger, ctx.guild)
+        command = await CommandRepository().find_by_trigger(
+            ctx.invoked_with, ctx.guild
+        )
 
         if command:
             await self.send_response(ctx, command)
+            return True
+
+        return False
 
     async def send_response(self, ctx, command) -> None:
         """Sends a respose for a given custom command database record."""
@@ -59,12 +56,12 @@ class Commands(Cog):
 
         if command["file"] != "":
             # TODO actual asynchronous file read
-            params["file"] = File(
-                open(os.path.join(settings.MEDIA_ROOT, command["file"]), "rb"),
-                command["original_file_name"],
-            )
+            with open(
+                os.path.join(settings.MEDIA_ROOT, command["file"]), "rb"
+            ) as file:
+                params["file"] = File(file, command["original_file_name"])
 
-        await ctx.send(**params)
+                await ctx.send(**params)
 
     async def parse_command(self, ctx, *args) -> ParsedCommand:
         """

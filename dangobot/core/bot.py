@@ -1,8 +1,10 @@
 import importlib
+import inspect
 import logging
 import traceback
+from typing import Callable, Coroutine, List, Tuple
 
-from discord.ext.commands.context import Context
+from discord.ext.commands import Context, errors
 from discord.guild import Guild
 from discord.ext import commands
 from django.conf import settings
@@ -14,13 +16,40 @@ from dangobot.core.embeds import ErrorEmbedFormatter
 
 from .help import DangoHelpCommand
 from .repository import GuildRepository
+from .plugin import Cog
 
 
 logger = logging.getLogger(__name__)
 
 
+def command_handler(
+    meth: Callable[[Cog, Context], Coroutine[None, None, bool]]
+) -> Callable[[Cog, Context], Coroutine[None, None, bool]]:
+    """
+    Registers this coroutine as a command handler for the bot.
+
+    This function will be called whenever the bot detects a command has been
+    invoked in a message, before calling the native command handling code.
+
+    It should have only one argument, the :class:`discord.ext.commands.Context`
+    for the invoked command, and return a `bool`, signalling whether it has
+    handled this invocation, or ignored it.
+    """
+    if inspect.iscoroutinefunction(meth) is False:
+        raise TypeError(f"{meth.__qualname__} is not a coroutine")
+
+    annotations = getattr(meth, "__annotations__", None)
+
+    if isinstance(annotations, dict):
+        annotations["command_handler"] = True
+
+    return meth
+
+
 class DangoBot(commands.Bot):
     """The core bot class."""
+
+    _command_handlers: List[Tuple[str, str]] = []
 
     def __init__(self):
         super().__init__(
@@ -42,6 +71,80 @@ class DangoBot(commands.Bot):
 
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Failed to load extension %s", app)
+
+        for name, cog in self.cogs.items():
+            self.register_command_handlers(name, cog)
+
+    def register_command_handlers(self, cog_name: str, cog: Cog):
+        """
+        Finds all methods decorated with :func:`command_handler` in the
+        specified `cog`, and registers them with the bot as command handlers.
+
+        Parameters
+        ----------
+        cog_name: `str`
+            Name of the cog.
+
+        cog: :class:`dangobot.core.plugin.Cog`
+            The actual cog class.
+        """
+        for _, method in inspect.getmembers(cog, inspect.iscoroutinefunction):
+            annotations: dict
+            annotations = getattr(method, "__annotations__", None)
+
+            if annotations is None:
+                continue
+
+            if annotations.get("command_handler", False) is True:
+                self._command_handlers.append((cog_name, method.__name__))
+
+    async def execute_command_handlers(self, ctx: Context) -> bool:
+        """
+        Executes all registered command handlers for a given context.
+
+        Parameters
+        ----------
+        ctx: :class:`discord.ext.commands.Context`
+            The command invocation context.
+        """
+        command_handled = False
+
+        for cog_name, method_name in self._command_handlers:
+            cog = self.get_cog(cog_name)
+
+            if cog is None:
+                continue
+
+            method = getattr(cog, method_name, None)
+
+            if method is None:
+                continue
+
+            command_handled = await method(ctx)
+
+        return command_handled
+
+    async def invoke(self, ctx):
+        handled_by_custom_handler = await self.execute_command_handlers(ctx)
+
+        if ctx.command is not None:
+            self.dispatch("command", ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise errors.CheckFailure(
+                        "The global check once functions failed."
+                    )
+            except errors.CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch("command_completion", ctx)
+        elif ctx.invoked_with and handled_by_custom_handler is False:
+            error = errors.CommandNotFound(
+                'Command "{}" is not found'.format(ctx.invoked_with)
+            )
+            self.dispatch("command_error", ctx, error)
 
     async def get_command_prefix(
         self, bot, message
