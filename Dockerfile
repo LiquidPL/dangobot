@@ -1,4 +1,4 @@
-FROM python:3.9-alpine as build
+FROM python:3.10-alpine as build
 
 RUN pip install pipenv
 
@@ -13,7 +13,7 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
 
 RUN /dangobot/docker/insert_version.sh
 
-FROM python:3.9-alpine as base
+FROM python:3.10-alpine as base
 
 LABEL org.opencontainers.image.source=https://github.com/LiquidPL/dangobot
 
