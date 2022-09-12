@@ -2,7 +2,7 @@ import importlib
 import inspect
 import logging
 import traceback
-from typing import Callable, Coroutine, List, Tuple
+from typing import Callable, Coroutine, List, Optional, Tuple
 
 from discord.ext.commands import Context, errors
 from discord.guild import Guild
@@ -89,7 +89,7 @@ class DangoBot(commands.Bot):
             The actual cog class.
         """
         for _, method in inspect.getmembers(cog, inspect.iscoroutinefunction):
-            annotations: dict
+            annotations: Optional[dict]
             annotations = getattr(method, "__annotations__", None)
 
             if annotations is None:
@@ -97,6 +97,11 @@ class DangoBot(commands.Bot):
 
             if annotations.get("command_handler", False) is True:
                 self._command_handlers.append((cog_name, method.__name__))
+
+    # async def post_what_can_i_say_except_delete_this_when_rafal_posts_cringe(
+    #     self, ctx: Context
+    # ) -> None:
+    #     pass
 
     async def execute_command_handlers(self, ctx: Context) -> bool:
         """
@@ -142,7 +147,7 @@ class DangoBot(commands.Bot):
                 self.dispatch("command_completion", ctx)
         elif ctx.invoked_with and handled_by_custom_handler is False:
             error = errors.CommandNotFound(
-                'Command "{}" is not found'.format(ctx.invoked_with)
+                f'Command "{ctx.invoked_with}" is not found'
             )
             self.dispatch("command_error", ctx, error)
 
@@ -213,7 +218,7 @@ class DangoBot(commands.Bot):
             )
         elif isinstance(exception, commands.MissingRequiredArgument):
             await context.send(
-                "You need to specify `{}`!".format(exception.param.name)
+                f"You need to specify `{exception.param.name}`!"
             )
             await context.send_help(context.command.qualified_name)
         elif isinstance(exception, commands.CommandError):
@@ -260,7 +265,7 @@ class DangoBot(commands.Bot):
                 name=exception.__class__.__module__
                 + "."
                 + exception.__class__.__qualname__,
-                value="```{}```".format(trace),
+                value=f"```{trace}```",
                 inline=False,
             )
             .add_field(name="Full traceback:", value=trace_url)

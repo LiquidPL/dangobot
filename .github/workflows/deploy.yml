@@ -6,7 +6,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: ['Build']
+    workflows: ["Build"]
     branches: [master]
     types:
       - completed

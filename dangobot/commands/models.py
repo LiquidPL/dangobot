@@ -8,9 +8,7 @@ from dangobot.core.models import Guild
 def file_path(instance, filename):
     """Returns the path in which the command attachments should be stored."""
 
-    return "commands/{guild_id}/{id}_{trigger}".format(
-        guild_id=instance.guild.id, id=uuid.uuid4(), trigger=filename
-    )
+    return f"commands/{instance.guild.id}/{uuid.uuid4()}_{filename}"
 
 
 class Command(models.Model):
@@ -26,4 +24,4 @@ class Command(models.Model):
         unique_together = ("guild", "trigger")
 
     def __str__(self):
-        return "[{0.guild.name}] {0.trigger} -> {0.response}".format(self)
+        return f"[{self.guild.name}] {self.trigger} -> {self.response}"

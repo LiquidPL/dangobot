@@ -164,12 +164,10 @@ class Commands(Cog):
         try:
             await CommandRepository().add_to_guild(ctx.guild, command)
         except exceptions.UniqueViolationError:
-            await ctx.send("Command `{}` already exists!".format(ctx.args[-1]))
+            await ctx.send(f"Command `{ctx.args[-1]}` already exists!")
             return
 
-        await ctx.send(
-            "Command `{}` added successfully!".format(command.trigger)
-        )
+        await ctx.send(f"Command `{command.trigger}` added successfully!")
 
     @cmds.command()
     async def list(self, ctx: Context):
@@ -182,7 +180,8 @@ class Commands(Cog):
         embed.title = "Available custom commands:"
         embed.description = "\n".join(
             map(
-                lambda c: "{}{}".format(ctx.prefix, c["trigger"]), command_list
+                lambda c: f"{ctx.prefix}{c['trigger']}",
+                command_list,
             )
         )
 
