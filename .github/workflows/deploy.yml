@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Pull updated image and restart container
-        uses: appleboy/ssh-action@v0.1.4
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           port: ${{ secrets.DEPLOY_PORT }}
@@ -30,3 +30,4 @@ jobs:
             docker pull ghcr.io/liquidpl/dangobot:latest
             docker-compose down
             docker-compose up -d
+            docker rmi $(docker images -f "dangling=true" -q ghcr.io/liquidpl/dangobot)
