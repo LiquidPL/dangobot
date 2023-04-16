@@ -26,8 +26,6 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_DIRECTORY }}
             docker pull ghcr.io/liquidpl/dangobot:latest
-            docker-compose down
-            docker-compose up -d
+            docker compose -p dangobot restart bot
             docker rmi $(docker images -f "dangling=true" -q ghcr.io/liquidpl/dangobot)
