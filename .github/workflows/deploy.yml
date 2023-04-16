@@ -27,6 +27,6 @@ jobs:
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           script: |
             docker pull ghcr.io/liquidpl/dangobot:latest
-            curl -k -X POST -H "X-API-Key: ${{ secrets.DEPLOY_PORTAINER_TOKEN }}" ${{ secrets.DEPLOY_PORTAINER_HOST }}/api/stacks/${{ secrets.DEPLOY_PORTAINER_STACK_ID }}/stop
-            curl -k -X POST -H "X-API-Key: ${{ secrets.DEPLOY_PORTAINER_TOKEN }}" ${{ secrets.DEPLOY_PORTAINER_HOST }}/api/stacks/${{ secrets.DEPLOY_PORTAINER_STACK_ID }}/start
+            curl -k -o /dev/null -X POST -H "X-API-Key: ${{ secrets.DEPLOY_PORTAINER_TOKEN }}" ${{ secrets.DEPLOY_PORTAINER_HOST }}/api/stacks/${{ secrets.DEPLOY_PORTAINER_STACK_ID }}/stop
+            curl -k -o /dev/null -X POST -H "X-API-Key: ${{ secrets.DEPLOY_PORTAINER_TOKEN }}" ${{ secrets.DEPLOY_PORTAINER_HOST }}/api/stacks/${{ secrets.DEPLOY_PORTAINER_STACK_ID }}/start
             docker rmi $(docker images -f "dangling=true" -q ghcr.io/liquidpl/dangobot)
