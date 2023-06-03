@@ -1,4 +1,7 @@
-class DangoException(Exception):
+from discord.ext.commands import CommandError
+
+
+class DangoError(CommandError):
     """
     Base exception class for the bot.
 
@@ -6,7 +9,7 @@ class DangoException(Exception):
     """
 
 
-class DownloadError(DangoException):
+class DownloadError(DangoError):
     """
     Exception raised when an error occurs while the bot was downloading a file.
     """

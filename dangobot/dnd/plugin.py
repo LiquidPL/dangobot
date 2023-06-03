@@ -4,9 +4,11 @@ from typing import List, Match, Tuple
 
 from discord import Embed
 from discord.ext import commands
+from discord.ext.commands import Context
 
+from dangobot.core.bot import DangoBot
 from dangobot.core.plugin import Cog
-from dangobot.core.errors import DangoException
+from dangobot.core.errors import DangoError
 
 
 DICES = 1
@@ -18,7 +20,7 @@ roll_pattern = re.compile(r"([0-9]*)d([0-9]+)")
 number_pattern = re.compile(r"([0-9]+)")
 
 
-class InvalidRollException(DangoException):
+class InvalidRoll(DangoError):
     """
     Thrown whenever the roll string passed to
     `:func:DnD.process_roll` is invalid.
@@ -32,7 +34,7 @@ class DnD(Cog):
     """
 
     @commands.command()
-    async def roll(self, ctx, *, roll_string: str):
+    async def roll(self, ctx: Context, *, roll_string: str):
         """
         Roll a variable amount of dice, commonly used in\
         tabletop/pen-and-paper role-playing games.
@@ -56,20 +58,16 @@ class DnD(Cog):
             if not roll:
                 continue
 
-            try:
-                (value, rolled_values) = self.process_roll(roll)
+            (value, rolled_values) = self.process_roll(roll)
 
-                full_value += value
+            full_value += value
 
-                if len(rolled_values) > 20:
-                    display_format = FULL_VALUE
-                elif len(rolls) == 1:
-                    results = rolled_values
-                else:
-                    results.append(value)
-            except InvalidRollException as exc:
-                await ctx.send(exc)
-                return
+            if len(rolled_values) > 20:
+                display_format = FULL_VALUE
+            elif len(rolls) == 1:
+                results = rolled_values
+            else:
+                results.append(value)
 
         embed = Embed(title=f"Rolling {roll_string}")
 
@@ -127,10 +125,10 @@ class DnD(Cog):
         roll_match = roll_pattern.fullmatch(roll)
 
         if not roll_match:
-            raise InvalidRollException("Invalid roll!")
+            raise InvalidRoll("Invalid roll!")
 
         return self.calculate_roll(roll_match)
 
 
-def setup(bot):  # pylint: disable=missing-function-docstring
-    bot.add_cog(DnD(bot))
+async def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
+    await bot.add_cog(DnD(bot))

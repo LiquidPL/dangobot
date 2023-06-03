@@ -1,7 +1,7 @@
-from discord.ext.commands.context import Context
-from discord.ext.commands import has_permissions
 from discord.ext import commands
+from discord.ext.commands import Context, has_permissions, NoPrivateMessage
 
+from dangobot.core.bot import DangoBot
 from dangobot.core.plugin import Cog
 from dangobot.core.repository import GuildRepository
 
@@ -17,8 +17,11 @@ class Management(Cog):
 
     @config.command()
     @has_permissions(administrator=True)
-    async def setprefix(self, ctx, prefix: str):
+    async def setprefix(self, ctx: Context, prefix: str):
         """Sets a new command prefix for the bot commands."""
+        if ctx.guild is None:
+            raise NoPrivateMessage("You cannot use this command in a DM")
+
         if await GuildRepository().set_command_prefix(ctx.guild, prefix):
             message = f"Command prefix changed to `{prefix}`."
         else:
@@ -27,5 +30,5 @@ class Management(Cog):
         await ctx.send(content=message)
 
 
-def setup(bot):  # pylint: disable=missing-function-docstring
-    bot.add_cog(Management(bot))
+async def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
+    await bot.add_cog(Management(bot))

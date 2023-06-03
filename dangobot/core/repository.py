@@ -14,7 +14,7 @@ from django.conf import settings
 from django.db.models.base import Model
 
 from .models import Guild as DBGuild
-from .database import db_pool as _db_pool
+from . import database
 
 
 def _get_query_string(args: Dict[str, Any]) -> str:
@@ -26,7 +26,7 @@ def _get_query_string(args: Dict[str, Any]) -> str:
 class RepositoryABCSingleton(
     ABCMeta
 ):  # pylint: disable=missing-class-docstring
-    _instances: Dict[RepositoryABCSingleton, Repository] = {}
+    _instances = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -45,7 +45,7 @@ class Repository(metaclass=RepositoryABCSingleton):
         super().__init__()
 
         if db_pool is None:
-            db_pool = _db_pool
+            db_pool = database.db_pool
 
         self.db_pool = db_pool
 
@@ -281,7 +281,11 @@ class GuildRepository(Repository):  # pylint: disable=missing-class-docstring
         if (prefix := self._cache[guild.id].prefix) is None:
             db_guild = await self.find_by_id(guild.id)
 
-            self._cache[guild.id].prefix = prefix = db_guild['command_prefix']
+            if db_guild is None:
+                await self.create_from_gateway_response(guild)
+                db_guild = await self.find_by_id(guild.id)
+
+            self._cache[guild.id].prefix = prefix = db_guild["command_prefix"]
 
         return prefix
 

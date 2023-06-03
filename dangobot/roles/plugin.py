@@ -2,10 +2,11 @@ from typing import Optional
 from asyncpg.exceptions import UniqueViolationError
 from discord import Member, VoiceState, Role, VoiceChannel, Embed
 from discord.ext import commands
+from discord.ext.commands import NoPrivateMessage
 from discord.ext.commands.context import Context
 
-from dangobot.core.plugin import Cog
 from dangobot.core.bot import DangoBot
+from dangobot.core.plugin import Cog
 from dangobot.roles.repository import RoleForVCRepository
 
 
@@ -35,10 +36,18 @@ class Roles(Cog):
 
             return channel.guild.get_role(role_record["role_id"])
 
-        if before.channel and (role := await get_role(before.channel)):
+        if (
+            before.channel
+            and isinstance(before.channel, VoiceChannel)
+            and (role := await get_role(before.channel))
+        ):
             await member.remove_roles(role)
 
-        if after.channel and (role := await get_role(after.channel)):
+        if (
+            after.channel
+            and isinstance(after.channel, VoiceChannel)
+            and (role := await get_role(after.channel))
+        ):
             await member.add_roles(role)
 
     @commands.group(invoke_without_command=True)
@@ -110,6 +119,9 @@ class Roles(Cog):
     @voice.command(name="list")
     async def voice_list(self, ctx: Context):
         """Lists all linked roles and voice channels."""
+        if ctx.guild is None:
+            raise NoPrivateMessage("You cannot use this command in a DM")
+
         roles = await RoleForVCRepository().find_by_guild(ctx.guild.id)
 
         embed = Embed()
@@ -123,11 +135,12 @@ class Roles(Cog):
         )
 
         if len(roles) == 0:
-            embed.description = \
+            embed.description = (
                 "There are no linked roles and voice channels right now."
+            )
 
         await ctx.send(embed=embed)
 
 
-def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
-    bot.add_cog(Roles(bot))
+async def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
+    await bot.add_cog(Roles(bot))

@@ -6,27 +6,31 @@ from discord import Embed
 
 
 class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
+    embed: Embed  # initialized in `prepare_help_command`
+
     def __init__(self, **options):
         self.sort_commands = options.pop("sort_commands", True)
         self.commands_heading = options.pop(
             "commands_heading", "Available commands:"
         )
         self.no_category = options.pop("no_category", "No category")
-        self.embed = None
 
         super().__init__(**options)
 
-    async def prepare_help_command(self, ctx, command=None):
+    async def prepare_help_command(self, ctx, command=None, /):
         self.embed = Embed()
 
         await super().prepare_help_command(ctx, command)
 
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(self, mapping, /):
         ctx = self.context
         bot = ctx.bot
 
+        if bot.user is None:
+            return
+
         self.embed.title = f"{bot.user.name} Help"
-        self.embed.set_thumbnail(url=bot.user.avatar_url)
+        self.embed.set_thumbnail(url=bot.user.display_avatar)
 
         def get_category(command):
             cog = command.cog
@@ -39,7 +43,7 @@ class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
 
         for cog, commands in to_iterate:
             description = ", ".join(
-                map(lambda x: f"{self.clean_prefix}{x.name}", commands)
+                map(lambda x: f"{self.context.clean_prefix}{x.name}", commands)
             )
 
             self.embed.add_field(
@@ -50,7 +54,7 @@ class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
 
         await self.send_embed()
 
-    async def send_cog_help(self, cog):
+    async def send_cog_help(self, cog, /):
         self.embed.title = cog.qualified_name
 
         if cog.description:
@@ -64,7 +68,7 @@ class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
 
         await self.send_embed()
 
-    async def send_group_help(self, group):
+    async def send_group_help(self, group, /):
         self.format_command(group)
 
         commands = await self.filter_commands(
@@ -75,7 +79,7 @@ class DangoHelpCommand(HelpCommand):  # pylint: disable=missing-class-docstring
 
         await self.send_embed()
 
-    async def send_command_help(self, command):
+    async def send_command_help(self, command, /):
         self.format_command(command)
         await self.send_embed()
 

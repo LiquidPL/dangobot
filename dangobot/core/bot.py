@@ -1,30 +1,32 @@
-import importlib
+import importlib.util
 import inspect
 import logging
 import traceback
-from typing import Callable, Coroutine, List, Optional, Tuple
+from typing import Callable, Coroutine, List, Optional, Tuple, TypeVar
 
-from discord.ext.commands import Context, errors
-from discord.guild import Guild
+from discord import Intents, Guild
 from discord.ext import commands
+from discord.ext.commands import Cog, Context, errors
 from django.conf import settings
+from django.db import connection
 
 import aiohttp
+import asyncpg
 
-from dangobot import loop
+from dangobot.core import database
 from dangobot.core.embeds import ErrorEmbedFormatter
 
 from .help import DangoHelpCommand
 from .repository import GuildRepository
-from .plugin import Cog
 
+_CogT = TypeVar("_CogT", bound=Cog)
 
 logger = logging.getLogger(__name__)
 
 
 def command_handler(
-    meth: Callable[[Cog, Context], Coroutine[None, None, bool]]
-) -> Callable[[Cog, Context], Coroutine[None, None, bool]]:
+    meth: Callable[[_CogT, Context], Coroutine[None, None, bool]]
+) -> Callable[[_CogT, Context], Coroutine[None, None, bool]]:
     """
     Registers this coroutine as a command handler for the bot.
 
@@ -51,15 +53,29 @@ class DangoBot(commands.Bot):
 
     _command_handlers: List[Tuple[str, str]] = []
 
+    http_session: aiohttp.ClientSession  # initialized in `setup_hook`
+
     def __init__(self):
+        intents = Intents.default()
+        intents.message_content = True  # pylint: disable=assigning-non-slot
+
         super().__init__(
-            loop=loop,
+            intents=intents,
             command_prefix=self.get_command_prefix,
             description=settings.DESCRIPTION,
             help_command=DangoHelpCommand(),
         )
 
-        self.http_session = None
+    async def setup_hook(self) -> None:
+        database.db_pool = await asyncpg.create_pool(
+            database=connection.settings_dict["NAME"],
+            user=connection.settings_dict["USER"],
+            password=connection.settings_dict["PASSWORD"],
+            host=connection.settings_dict["HOST"],
+            port=connection.settings_dict["PORT"],
+        )
+
+        self.http_session = aiohttp.ClientSession()
 
         for app in settings.INSTALLED_APPS:
             try:
@@ -67,7 +83,7 @@ class DangoBot(commands.Bot):
 
                 if spec:
                     logger.info("Loading extension %s", app)
-                    self.load_extension(f"{app}.plugin")
+                    await self.load_extension(f"{app}.plugin")
 
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Failed to load extension %s", app)
@@ -85,7 +101,7 @@ class DangoBot(commands.Bot):
         cog_name: `str`
             Name of the cog.
 
-        cog: :class:`dangobot.core.plugin.Cog`
+        cog: :class:`discord.ext.commands.Cog`
             The actual cog class.
         """
         for _, method in inspect.getmembers(cog, inspect.iscoroutinefunction):
@@ -129,7 +145,7 @@ class DangoBot(commands.Bot):
 
         return command_handled
 
-    async def invoke(self, ctx):
+    async def invoke(self, ctx, /):
         handled_by_custom_handler = await self.execute_command_handlers(ctx)
 
         if ctx.command is not None:
@@ -164,8 +180,6 @@ class DangoBot(commands.Bot):
         return await GuildRepository().get_command_prefix(guild=message.guild)
 
     async def on_ready(self):  # pylint: disable=missing-function-docstring
-        self.http_session = aiohttp.ClientSession()
-
         logger.info("Logged in as %s", self.user)
 
     async def on_guild_join(
@@ -186,8 +200,11 @@ class DangoBot(commands.Bot):
         else:
             await GuildRepository().create_from_gateway_response(after)
 
-    async def on_command_error(self, context: Context, exception):
-        if isinstance(exception, commands.CommandInvokeError):
+    async def on_command_error(self, context, exception, /):
+        if context.command is None:  # shouldn't happen
+            return
+
+        if isinstance(exception, errors.CommandInvokeError):
             await context.send(
                 embed=ErrorEmbedFormatter().format(
                     title="Sorry, an error has occurred!",
@@ -212,11 +229,11 @@ class DangoBot(commands.Bot):
                 embed = await self.format_traceback(exc)
 
                 await dm_channel.send(embed=embed)
-        elif isinstance(exception, commands.MissingPermissions):
+        elif isinstance(exception, errors.MissingPermissions):
             await context.send(
                 content="You don't have the permissions to do this!"
             )
-        elif isinstance(exception, commands.MissingRequiredArgument):
+        elif isinstance(exception, errors.MissingRequiredArgument):
             await context.send(
                 f"You need to specify `{exception.param.name}`!"
             )

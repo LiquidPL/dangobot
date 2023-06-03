@@ -1,11 +1,10 @@
-from typing import Any, List
+from typing import Any, List, Type
 
 from asyncpg.connection import Connection
-from asyncpg.types import Type
+from discord import Guild
 from django.db.models.base import Model
-from dangobot.core.repository import Repository
 
-from dangobot.core.models import Guild
+from dangobot.core.repository import Repository
 
 from .models import Command as DBCommand
 from .data import ParsedCommand
@@ -64,7 +63,7 @@ class CommandRepository(Repository):  # pylint: disable=missing-class-docstring
         async with self.db_pool.acquire() as conn:
             result: str = await conn.execute(
                 f"UPDATE {self.table_name} "
-                "SET response = $3, file = $4, original_file_name = $5"
+                "SET response = $3, file = $4, original_file_name = $5 "
                 "WHERE guild_id = $1 AND trigger = $2",
                 guild.id,
                 *command,

@@ -4,14 +4,13 @@ import os
 from asyncpg import exceptions
 from discord import File, Embed
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Context
+from discord.ext.commands import BadArgument, NoPrivateMessage, Context
 from django.conf import settings
 
 import validators
 
-from dangobot.core.bot import command_handler
+from dangobot.core.bot import command_handler, DangoBot
 from dangobot.core.plugin import Cog
-from dangobot.core.errors import DownloadError
 from dangobot.core.helpers import download_file
 
 from .models import file_path
@@ -40,6 +39,9 @@ class Commands(Cog):
         if not ctx.guild:  # we don't want commands to work in DMs
             return False
 
+        if not ctx.invoked_with:
+            return False
+
         command = await CommandRepository().find_by_trigger(
             ctx.invoked_with, ctx.guild
         )
@@ -50,7 +52,7 @@ class Commands(Cog):
 
         return False
 
-    async def send_response(self, ctx, command) -> None:
+    async def send_response(self, ctx: Context, command) -> None:
         """Sends a response for a given custom command database record."""
         params = {"content": command["response"]}
 
@@ -64,7 +66,7 @@ class Commands(Cog):
                 params["file"] = File(file, command["original_file_name"])
                 await ctx.send(**params)
 
-    async def parse_command(self, ctx, *args) -> ParsedCommand:
+    async def parse_command(self, ctx: Context, *args) -> ParsedCommand:
         """
         Parse the command syntax used for the :func:`add` and :func:`edit`
         functions.
@@ -139,7 +141,7 @@ class Commands(Cog):
 
     @cmds.command(usage="<trigger> (<response>) (attachment=url)")
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, *args):
+    async def add(self, ctx: Context, *args):
         """
         Add a new command.
 
@@ -155,17 +157,17 @@ class Commands(Cog):
         will result in an error. You can also upload an attachment to Discord
         instead of specifying the URL.
         """
-        try:
-            command = await self.parse_command(ctx, *args)
-        except (BadArgument, DownloadError) as exc:
-            await ctx.send(content=exc)
-            return
+        if ctx.guild is None:
+            raise NoPrivateMessage("This command cannot be used in a DM")
+
+        command = await self.parse_command(ctx, *args)
 
         try:
             await CommandRepository().add_to_guild(ctx.guild, command)
-        except exceptions.UniqueViolationError:
-            await ctx.send(f"Command `{ctx.args[-1]}` already exists!")
-            return
+        except exceptions.UniqueViolationError as exc:
+            raise BadArgument(
+                f"Command `{ctx.args[-1]}` already exists!"
+            ) from exc
 
         await ctx.send(f"Command `{command.trigger}` added successfully!")
 
@@ -174,6 +176,9 @@ class Commands(Cog):
         """
         List all commands defined in the server.
         """
+        if ctx.guild is None:
+            raise NoPrivateMessage("This command cannot be used in a DM")
+
         command_list = await CommandRepository().find_all_from_guild(ctx.guild)
 
         embed = Embed()
@@ -189,10 +194,13 @@ class Commands(Cog):
 
     @cmds.command()
     @commands.has_permissions(administrator=True)
-    async def delete(self, ctx, trigger: str):
+    async def delete(self, ctx: Context, trigger: str):
         """
         Deletes a command from the server.
         """
+        if ctx.guild is None:
+            raise NoPrivateMessage("This command cannot be used in a DM")
+
         deleted = await CommandRepository().delete_from_guild(
             trigger, ctx.guild
         )
@@ -206,17 +214,16 @@ class Commands(Cog):
 
     @cmds.command(usage="<trigger> (<response>) (attachment=url)")
     @commands.has_permissions(administrator=True)
-    async def edit(self, ctx, *args):
+    async def edit(self, ctx: Context, *args):
         """
         Edit an existing command.
 
         Has the same parameters as the add command.
         """
-        try:
-            command = await self.parse_command(ctx, *args)
-        except (BadArgument, DownloadError) as exc:
-            await ctx.send(content=exc)
-            return
+        if ctx.guild is None:
+            raise NoPrivateMessage("This command cannot be used in a DM")
+
+        command = await self.parse_command(ctx, *args)
 
         updated = await CommandRepository().update_in_guild(ctx.guild, command)
 
@@ -228,5 +235,5 @@ class Commands(Cog):
         await ctx.send(content=message.format(command.trigger))
 
 
-def setup(bot):  # pylint: disable=missing-function-docstring
-    bot.add_cog(Commands(bot))
+async def setup(bot: DangoBot):  # pylint: disable=missing-function-docstring
+    await bot.add_cog(Commands(bot))

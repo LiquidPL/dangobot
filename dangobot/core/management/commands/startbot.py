@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 
 import logging
+import logging.config
 import os
 import yaml
 
@@ -28,4 +29,4 @@ class Command(BaseCommand):
         self.bot = DangoBot()
 
     def handle(self, *args, **options):
-        self.bot.run(settings.BOT_TOKEN)
+        self.bot.run(settings.BOT_TOKEN, log_handler=None)
