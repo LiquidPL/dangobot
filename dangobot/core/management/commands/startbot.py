@@ -1,10 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
-import logging
-import logging.config
+from discord.utils import _ColourFormatter, stream_supports_colour
+
 import os
-import yaml
+import logging
+import logging.handlers
 
 from dangobot.core.bot import DangoBot
 
@@ -15,18 +16,43 @@ class Command(BaseCommand):
     def __init__(self):
         super().__init__()
 
-        with open(
-            os.path.join(settings.BASE_DIR, "dangobot", "logging.yml"), "r"
-        ) as config_file:
-            logging_config = yaml.safe_load(config_file)
-
-        if settings.DEBUG:
-            for k, v in logging_config["loggers"].items():
-                logging_config["loggers"][k]["handlers"].append("console")
-
-        logging.config.dictConfig(logging_config)
-
+        self.setup_logging()
         self.bot = DangoBot()
+
+    def setup_logging(self):
+        os.makedirs("logs/", exist_ok=True)
+
+        logger = logging.getLogger()
+
+        logger.setLevel(logging.INFO)
+
+        consoleHandler = logging.StreamHandler()
+        if stream_supports_colour(consoleHandler.stream):
+            consoleHandler.setFormatter(_ColourFormatter())
+        else:
+            consoleHandler.setFormatter(
+                logging.Formatter(
+                    "{asctime} {levelname:<8} {name} {message}",
+                    "%Y-%m-%d %H:%M:%S",
+                    style="{",
+                )
+            )
+        logger.addHandler(consoleHandler)
+
+        fileHandler = logging.handlers.RotatingFileHandler(
+            filename="logs/dangobot.log",
+            encoding="utf-8",
+            maxBytes=32 * 1024 * 1024,
+            backupCount=5,
+        )
+        fileHandler.setFormatter(
+            logging.Formatter(
+                "{asctime} {levelname:<8} {name} {message}",
+                "%Y-%m-%d %H:%M:%S",
+                style="{",
+            )
+        )
+        logger.addHandler(fileHandler)
 
     def handle(self, *args, **options):
         self.bot.run(settings.BOT_TOKEN, log_handler=None)

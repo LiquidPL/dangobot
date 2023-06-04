@@ -6,7 +6,7 @@ services:
     container_name: dangobot-bot
     volumes:
       - media:/dangobot/media
-      - ./dangobot.log:/dangobot/dangobot.log
+      - ./logs:/dangobot/logs
     env_file:
       - .env
     restart: always

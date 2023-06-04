@@ -33,4 +33,6 @@ WORKDIR /dangobot
 
 COPY --from=build --chown=dangobot:dangobot /dangobot /dangobot
 
+RUN mkdir /dangobot/logs
+
 CMD sh -c "pipenv run ./manage.py migrate && pipenv run ./manage.py startbot"
