@@ -79,6 +79,8 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
           tags: |
             ghcr.io/liquidpl/dangobot:${{ steps.vars.outputs.sha_short }}
             ghcr.io/liquidpl/dangobot:latest

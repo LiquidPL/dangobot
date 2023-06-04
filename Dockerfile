@@ -13,6 +13,9 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
 
 RUN /dangobot/docker/insert_version.sh
 
+# remove .git directory as it was only needed to retrieve the commit hash
+RUN rm -rf .git
+
 FROM python:3.11-alpine as base
 
 LABEL org.opencontainers.image.source=https://github.com/LiquidPL/dangobot
