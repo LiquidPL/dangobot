@@ -5,7 +5,7 @@ load-plugins=pylint_django
 django-settings-module=dangobot.core.settings
 
 [MESSAGES CONTROL]
-disable=missing-module-docstring,fixme
+disable=missing-module-docstring,fixme,no-member ; no-member is handled by pyright
 
 [FORMAT]
 max-line-length=79

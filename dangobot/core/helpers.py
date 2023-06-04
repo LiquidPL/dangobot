@@ -1,9 +1,10 @@
 import os
 
 
-class DownloadFailed(RuntimeError):
+class FileTooLarge(RuntimeError):
     """
-    Exception raised when an error occurs while the bot was downloading a file.
+    Exception raised when the downloaded file exceeds the Discord file size
+    limit (currently 25 MiB).
     """
 
 
@@ -15,19 +16,9 @@ async def download_file(http_session, url, path):
     file_size = 0
     chunk_size = 1024
 
-    error_msgs = {404: "The requested file was not found!"}
-
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    async with http_session.get(url) as resp:
-        if resp.status != 200:
-            if resp.status in error_msgs:
-                message = error_msgs[resp.status]
-            else:
-                message = "An error has occured while downloading the file!"
-
-            raise DownloadFailed(message)
-
+    async with http_session.get(url, raise_for_status=True) as resp:
         with open(path, "wb") as file:
             while True:
                 chunk = await resp.content.read(1024)
@@ -35,12 +26,12 @@ async def download_file(http_session, url, path):
                     break
 
                 file_size = file_size + chunk_size
-                if file_size > 8 * 2**20:  # 8 MiB
+                if file_size > 25 * 2**20:  # 8 MiB
                     file.close()
                     os.remove(path)
 
-                    raise DownloadFailed(
-                        "The provided attachment is larger than 8MB!"
+                    raise FileTooLarge(
+                        "The provided attachment is larger than 25MB!"
                     )
 
                 file.write(chunk)

@@ -1,17 +1,23 @@
 import logging
 import os
 
+from aiohttp import ClientError, ClientResponseError
 from asyncpg import exceptions
 from discord import File, Embed
 from discord.ext import commands
-from discord.ext.commands import BadArgument, NoPrivateMessage, Context
+from discord.ext.commands import (
+    BadArgument,
+    NoPrivateMessage,
+    CommandError,
+    Context,
+)
 from django.conf import settings
 
 import validators
 
 from dangobot.core.bot import command_handler, DangoBot
 from dangobot.core.plugin import Cog
-from dangobot.core.helpers import download_file
+from dangobot.core.helpers import download_file, FileTooLarge
 
 from .models import file_path
 from .data import ParsedCommand
@@ -125,7 +131,24 @@ class Commands(Cog):
             path_relative = file_path(ctx, filename)
             path_absolute = f"{settings.MEDIA_ROOT}/{path_relative}"
 
-            await download_file(self.bot.http_session, url, path_absolute)
+            try:
+                await download_file(self.bot.http_session, url, path_absolute)
+            except ClientError as exc:
+                if isinstance(exc, ClientResponseError) and exc.status == 404:
+                    raise CommandError(
+                        "The requested file was not found!"
+                    ) from exc
+
+                logger.error(
+                    "An error occured while downloading file %s to %s.",
+                    url,
+                    path_absolute,
+                    exc_info=True,
+                )
+
+                raise exc
+            except FileTooLarge as exc:
+                raise CommandError(str(exc)) from exc
 
         trigger = args[0]
         response = " ".join(args[1:])
