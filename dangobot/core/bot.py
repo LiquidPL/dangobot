@@ -201,9 +201,6 @@ class DangoBot(commands.Bot):
             await GuildRepository().create_from_gateway_response(after)
 
     async def on_command_error(self, context, exception, /):
-        if context.command is None:  # shouldn't happen
-            return
-
         if isinstance(exception, errors.CommandInvokeError):
             await context.send(
                 embed=ErrorEmbedFormatter().format(
@@ -233,7 +230,10 @@ class DangoBot(commands.Bot):
             await context.send(
                 content="You don't have the permissions to do this!"
             )
-        elif isinstance(exception, errors.MissingRequiredArgument):
+        elif (
+            isinstance(exception, errors.MissingRequiredArgument)
+            and context.command is not None
+        ):
             await context.send(
                 f"You need to specify `{exception.param.name}`!"
             )
