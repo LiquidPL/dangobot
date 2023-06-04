@@ -1,6 +1,10 @@
 import os
 
-from .errors import DownloadError
+
+class DownloadFailed(RuntimeError):
+    """
+    Exception raised when an error occurs while the bot was downloading a file.
+    """
 
 
 async def download_file(http_session, url, path):
@@ -22,7 +26,7 @@ async def download_file(http_session, url, path):
             else:
                 message = "An error has occured while downloading the file!"
 
-            raise DownloadError(message)
+            raise DownloadFailed(message)
 
         with open(path, "wb") as file:
             while True:
@@ -31,11 +35,11 @@ async def download_file(http_session, url, path):
                     break
 
                 file_size = file_size + chunk_size
-                if file_size > 8 * 2 ** 20:  # 8 MiB
+                if file_size > 8 * 2**20:  # 8 MiB
                     file.close()
                     os.remove(path)
 
-                    raise DownloadError(
+                    raise DownloadFailed(
                         "The provided attachment is larger than 8MB!"
                     )
 

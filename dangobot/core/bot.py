@@ -13,10 +13,9 @@ from django.db import connection
 import aiohttp
 import asyncpg
 
-from dangobot.core import database
-from dangobot.core.embeds import ErrorEmbedFormatter
-
-from .help import DangoHelpCommand
+from . import database
+from .commands.embeds import ErrorEmbedFormatter
+from .commands.help import DangoHelpCommand
 from .repository import GuildRepository
 
 _CogT = TypeVar("_CogT", bound=Cog)

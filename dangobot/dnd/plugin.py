@@ -4,11 +4,10 @@ from typing import List, Match, Tuple
 
 from discord import Embed
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, BadArgument
 
 from dangobot.core.bot import DangoBot
 from dangobot.core.plugin import Cog
-from dangobot.core.errors import DangoError
 
 
 DICES = 1
@@ -20,7 +19,7 @@ roll_pattern = re.compile(r"([0-9]*)d([0-9]+)")
 number_pattern = re.compile(r"([0-9]+)")
 
 
-class InvalidRoll(DangoError):
+class InvalidRoll(BadArgument):
     """
     Thrown whenever the roll string passed to
     `:func:DnD.process_roll` is invalid.
