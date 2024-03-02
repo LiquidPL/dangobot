@@ -19,10 +19,10 @@ black = "==22.8.0"
 "flake8" = "*"
 pylint = "*"
 pylint-django = "*"
-django-stubs = ">=4.2.1,<4.3"
 types-pyyaml = "*"
 types-chardet = "*"
 types-python-dateutil = "*"
+django-stubs = "*"
 
 [requires]
 python_version = "3.11"
