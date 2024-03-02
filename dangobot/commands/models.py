@@ -20,7 +20,8 @@ class Command(models.Model):
     file = models.FileField(upload_to=file_path, max_length=300, blank=True)
     original_file_name = models.CharField(max_length=300, blank=True)
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        # see https://github.com/microsoft/pylance-release/issues/3814
         unique_together = ("guild", "trigger")
 
     def __str__(self):

@@ -22,7 +22,7 @@ pylint-django = "*"
 types-pyyaml = "*"
 types-chardet = "*"
 types-python-dateutil = "*"
-django-stubs = "*"
+django-types = "*"
 
 [requires]
 python_version = "3.11"

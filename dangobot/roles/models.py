@@ -15,5 +15,6 @@ class RoleForVoiceChannel(models.Model):
     voice_channel_id = models.BigIntegerField()
     role_id = models.BigIntegerField()
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        # see https://github.com/microsoft/pylance-release/issues/3814
         unique_together = ("voice_channel_id", "role_id")
