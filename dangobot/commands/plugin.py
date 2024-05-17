@@ -72,7 +72,7 @@ class Commands(Cog):
                 params["file"] = File(file, command["original_file_name"])
                 await ctx.send(**params)
 
-    async def parse_command(self, ctx: Context, *args) -> ParsedCommand:
+    async def parse_command(self, ctx: Context, args) -> ParsedCommand:
         """
         Parse the command syntax used for the :func:`add` and :func:`edit`
         functions.
