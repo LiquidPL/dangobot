@@ -1,0 +1,21 @@
+{{- if not .Values.bot.persistence.existingClaim -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "dangobot.persistentVolumeClaimName" . }}
+  labels:
+    {{- include "dangobot.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.bot.persistence.retain }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
+spec:
+  {{- if .Values.bot.persistence.storageClass }}
+  storageClassName: {{ .Values.bot.persistence.storageClass -}}
+  {{- end }}
+  accessModes:
+    - {{ .Values.bot.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.bot.persistence.size }}
+{{- end -}}

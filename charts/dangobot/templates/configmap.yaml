@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dangobot.fullname" . }}
+  labels:
+    {{- include "dangobot.labels" . | nindent 4 }}
+data:
+  description: '{{ .Values.bot.config.description }}'
+  commandPrefix: '{{ .Values.bot.config.commandPrefix }}'
+  {{- if .Values.bot.config.ownerId }}
+  ownerId: '{{ .Values.bot.config.ownerId }}'
+  {{- end }}
+  sendErrors: '{{ empty .Values.bot.config.ownerId | ternary false .Values.bot.config.sendErrors }}'

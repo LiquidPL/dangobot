@@ -1,5 +1,6 @@
 media/
 logs/
+charts/
 settings.py
 
 ### Python ###
