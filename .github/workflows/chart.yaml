@@ -1,0 +1,39 @@
+name: Publish Helm chart
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish Helm Chart to GitHub Container registry
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
+    defaults:
+      run:
+        working-directory: ./charts/dangobot
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Add chart dependencies to Helm
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Download chart dependencies
+        run: helm dependency build
+
+      - name: Package chart
+        run: helm package .
+
+      - name: Get the chart version
+        id: vars
+        run: echo "version=$(helm show chart . | grep -E "^version:" | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Login to GitHub Container Registry
+        run: echo '${{ secrets.GITHUB_TOKEN }}' | helm registry login -u '${{ github.repository_owner }}' --password-stdin ghcr.io/${{ github.repository_owner }}
+
+      - name: Push package
+        run: helm push dangobot-${{ steps.vars.outputs.version }}.tgz oci://ghcr.io/liquidpl/charts
