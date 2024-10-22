@@ -34,7 +34,8 @@ bot:
     name: dangobot
     username: dangobot
     # use an externally provided secret in production
-    # externalSecretName:
+    # existingSecret:
+    passwordKey: password
     password: dangobot
 
   persistence:
