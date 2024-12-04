@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "<4.2,>=4.1.1"
+django = ">=4.1.1,<4.3"
 asyncpg = ">=0.26,<0.27"
 "psycopg2" = "<3.0,>=2.9.3"
 pyyaml = "<7.0,>=6.0"
